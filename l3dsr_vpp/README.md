@@ -143,9 +143,24 @@ Here is the network topology I used.
 ```
     172.25.0.0/24     172.25.1.0/24      172.25.2.0/24
 client ---------- vpp -------------L3 SW ------ two servers
-    0.30      0.10   1.10       1.20   2.20     2.30, 2.31
+    0.30      0.10   1.10       1.20 |  2.20     2.30, 2.31
+                                     |
+                                   0.20(172.25.0.20)
 
 VIP for LB : 172.26.0.10
+```
+
+The L3 SW has three networks, 172.25.[0-2].20<br>
+The IP address from the client to the VIP.
+```
+Src IP : 172.25.0.30
+Dst IP : 172.26.0.10
+```
+
+The IP address from the vpp to the server.
+```
+Src IP : 172.25.0.30
+Dst IP : 172.25.2.30 or 31 ( vpp will add specified DSCP number )
 ```
 
 <br>lb_plugin.so must be loaded to use Load Balancing.
