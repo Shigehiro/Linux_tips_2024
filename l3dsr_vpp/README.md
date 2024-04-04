@@ -8,6 +8,7 @@
     - [Client requests](#client-requests)
     - [Server responses](#server-responses)
     - [Configure vpp for L3 DSR](#configure-vpp-for-l3-dsr)
+  - [Configure the server to rewrite its SrcIP based on DSCP](#configure-the-server-to-rewrite-its-srcip-based-on-dscp)
 
 ## Description
 
@@ -302,4 +303,48 @@ echo "Configure L3 DSR with DSCP"
 vppctl lb conf timeout 3
 vppctl lb vip 172.26.0.10/24 encap l3dsr dscp 2 port 0 new_len 32
 vppctl lb as 172.26.0.10/24 port 0 172.25.2.30 172.25.2.31
+```
+
+## Configure the server to rewrite its SrcIP based on DSCP
+
+```
+# dnf -y groupinstall "Development tools"
+```
+
+```
+# git clone https://github.com/yahoo/l3dsr.git
+```
+
+```
+dnf install iptables-devel kernel-abi-stablelists kernel-rpm-macros
+```
+
+```
+[root@lab03-cs01 iptables-daddr]# make rpm-pkgs
+make -C 'rpm' pkgs
+make[1]: Entering directory '/root/l3dsr/linux/iptables-daddr/rpm'
+rpmbuild -tb                'iptables-daddr-0.10.1.tar.xz'
+setting SOURCE_DATE_EPOCH=1591056000
+error: Failed build dependencies:
+        kernel-abi-whitelists is needed by iptables-daddr-0.10.1-20200602.el9.x86_64
+make[1]: *** [Makefile:75: /root/rpmbuild/RPMS/x86_64/iptables-daddr-0.10.1-20200602.el9.x86_64.rpm] Error 11
+make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/rpm'
+make: *** [Makefile:45: pkgs] Error 2
+[root@lab03-cs01 iptables-daddr]#
+```
+
+```
+[root@lab03-cs01 iptables-daddr]# dnf search kernel-abi
+Last metadata expiration check: 0:04:15 ago on Thu 04 Apr 2024 06:10:04 AM EDT.
+======================================================================= Name Matched: kernel-abi ========================================================================
+kernel-abi-stablelists.noarch : The Red Hat Enterprise Linux kernel ABI symbol stablelists
+[root@lab03-cs01 iptables-daddr]#
+```
+
+```
+[root@lab03-cs01 iptables-daddr]# cat /etc/centos-release
+CentOS Stream release 9
+
+https://kojihub.stream.centos.org/koji/rpminfo?rpmID=60688
+
 ```
