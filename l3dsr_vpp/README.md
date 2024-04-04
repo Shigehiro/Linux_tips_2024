@@ -5,6 +5,9 @@
   - [About vpp](#about-vpp)
   - [Install vpp](#install-vpp)
   - [Configure L3 DSR](#configure-l3-dsr)
+    - [Client requests](#client-requests)
+    - [Server responses](#server-responses)
+    - [Configure vpp for L3 DSR](#configure-vpp-for-l3-dsr)
 
 ## Description
 
@@ -102,6 +105,7 @@ local0                            0     down          0/0/0/0
 #
 ```
 
+<br>0000:07:00.0 and 0000:08:00.0 are managed by vpp.
 ```
 # dmesg | grep -E 'vpp|enp1s0'
 [    1.638850] virtio_net virtio0 enp1s0: renamed from eth0 # management network. this is for accessing the internet
@@ -142,26 +146,42 @@ Reference: https://docs.fd.io/vpp/24.06/developer/plugins/lb.html<br>
 Here is the network topology I used.
 ```
     172.25.0.0/24     172.25.1.0/24      172.25.2.0/24
-client ---------- vpp -------------L3 SW ------ two servers
-    0.30      0.10   1.10       1.20 |  2.20     2.30, 2.31
-                                     |
+client ---L2SW------ vpp -------------L3 SW ------ two servers
+    0.30   |     0.10   1.10       1.20 |  2.20     2.30, 2.31
+           |                            |
+           ------------------------------ 
                                    0.20(172.25.0.20)
 
 VIP for LB : 172.26.0.10
 ```
 
 The L3 SW has three networks, 172.25.[0-2].20<br>
-The IP address from the client to the VIP.
+
+### Client requests
+
+Client -> L2SW -> vpp -> L3SW -> two servers
+  
+Client -> vpp
 ```
 Src IP : 172.25.0.30
-Dst IP : 172.26.0.10
+Dst IP : 172.26.0.10 (VIP)
 ```
 
-The IP address from the vpp to the server.
+vpp -> two servers
 ```
 Src IP : 172.25.0.30
 Dst IP : 172.25.2.30 or 31 ( vpp will add specified DSCP number )
 ```
+
+### Server responses
+
+Two servers -> L3 SW -> Client
+```
+Src IP : 172.26.0.10 ( The server should rewrite its srcIP as VIP based on DSCP )
+Dst IP : 172.25.0.30
+```
+
+### Configure vpp for L3 DSR
 
 <br>lb_plugin.so must be loaded to use Load Balancing.
 ```
@@ -228,7 +248,14 @@ vppctl lb as 172.26.0.10/24 port 0 172.25.2.30 172.25.2.31
     172.25.2.30 16 buckets   18 flows  dpo:22 used
 ```
 
-<br>On the client, send DNS queries.
+<br>On the client, send DNS queries.<br>
+
+Confiure static routes if needed.( )
+```
+# nmcli con show eth1 |grep ^ipv4.routes
+ipv4.routes:                            { ip = 172.25.2.0/24, nh = 172.25.0.20 }; { ip = 172.26.0.10/32, nh = 172.25.0.10 }
+```
+
 ```
 # for i in $(seq 1 50);do dig @172.26.0.10 www.google.com;sleep 3;done
 ```
