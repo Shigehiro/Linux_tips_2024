@@ -565,7 +565,7 @@ www.google.com.         300     IN      A       142.250.196.132
 ```
 
 Here is a capture data collected on the server.<br>
-No1. vpp -> the server
+No1. vpp -> the server<br>
 No2. the server -> client
 
 ```
