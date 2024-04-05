@@ -2,6 +2,8 @@
 
 - [L3 DSR based on DSCP with vpp](#l3-dsr-based-on-dscp-with-vpp)
   - [Description](#description)
+  - [Tested Network Toplogy](#tested-network-toplogy)
+  - [Reference](#reference)
   - [About vpp](#about-vpp)
   - [Install vpp](#install-vpp)
   - [Configure L3 DSR](#configure-l3-dsr)
@@ -9,10 +11,34 @@
     - [Server responses](#server-responses)
     - [Configure vpp for L3 DSR](#configure-vpp-for-l3-dsr)
   - [Configure the server to rewrite its SrcIP based on DSCP](#configure-the-server-to-rewrite-its-srcip-based-on-dscp)
+    - [Install DSCP kernel module](#install-dscp-kernel-module)
+      - [Rocky Linux 8.9](#rocky-linux-89)
+      - [Rocky Linux 9.3](#rocky-linux-93)
+  - [Confirm L3DSR works](#confirm-l3dsr-works)
 
 ## Description
 
 Here is how to configure L3 DSR based on DSCP with vpp
+
+## Tested Network Toplogy
+
+All nodes are running as Virtual Machine under KVM.
+```
+    172.25.0.0/24        172.25.1.0/24      172.25.2.0/24
+client ---L2SW------ vpp ------------- vyos ------ two servers
+    0.30   |     0.10   1.10       1.20 |  2.20     2.30, 2.31
+           |                            |
+           ------------------------------ 
+                                   0.20(172.25.0.20)
+
+VIP for LB : 172.26.0.10
+```
+
+## Reference
+
+- https://events19.linuxfoundation.org/wp-content/uploads/2018/07/ONS.NA_.2019.VPP_LB_public.pdf
+- https://www.loadbalancer.org/blog/yahoos-l3-direct-server-return-an-alternative-to-lvs-tun-explored/
+- https://github.com/yahoo/l3dsr
 
 ## About vpp
 
@@ -144,10 +170,9 @@ Send ping from the vpp box to the other nodes.
 
 Reference: https://docs.fd.io/vpp/24.06/developer/plugins/lb.html<br>
 
-Here is the network topology I used.
 ```
-    172.25.0.0/24     172.25.1.0/24      172.25.2.0/24
-client ---L2SW------ vpp -------------L3 SW ------ two servers
+    172.25.0.0/24        172.25.1.0/24      172.25.2.0/24
+client ---L2SW------ vpp ------------- vyos ------ two servers
     0.30   |     0.10   1.10       1.20 |  2.20     2.30, 2.31
            |                            |
            ------------------------------ 
@@ -227,7 +252,8 @@ local0 (dn):
 # vppctl ip route add 172.25.2.0/24 via 172.25.1.20 GigabitEthernet8/0/0
 ```
 
-<br>Configure L3 DSR
+<br>Configure L3 DSR<br>
+You do not need to configure VIPs on VPP interfaces.
 ```
 vppctl lb conf timeout 3
 vppctl lb vip 172.26.0.10/24 encap l3dsr dscp 2 port 0 new_len 32
@@ -307,44 +333,292 @@ vppctl lb as 172.26.0.10/24 port 0 172.25.2.30 172.25.2.31
 
 ## Configure the server to rewrite its SrcIP based on DSCP
 
+### Install DSCP kernel module
+
+#### Rocky Linux 8.9
+
 ```
-# dnf -y groupinstall "Development tools"
+# cat /etc/rocky-release
+Rocky Linux release 8.9 (Green Obsidian)
+# uname -ri
+4.18.0-513.18.1.el8_9.x86_64 x86_64
+
 ```
 
 ```
-# git clone https://github.com/yahoo/l3dsr.git
+dnf groupinstall "Development Tools" -y
 ```
 
 ```
-dnf install iptables-devel kernel-abi-stablelists kernel-rpm-macros
+dnf install iptables-devel iptables-utils -y
 ```
 
 ```
-[root@lab03-cs01 iptables-daddr]# make rpm-pkgs
-make -C 'rpm' pkgs
-make[1]: Entering directory '/root/l3dsr/linux/iptables-daddr/rpm'
-rpmbuild -tb                'iptables-daddr-0.10.1.tar.xz'
-setting SOURCE_DATE_EPOCH=1591056000
-error: Failed build dependencies:
-        kernel-abi-whitelists is needed by iptables-daddr-0.10.1-20200602.el9.x86_64
-make[1]: *** [Makefile:75: /root/rpmbuild/RPMS/x86_64/iptables-daddr-0.10.1-20200602.el9.x86_64.rpm] Error 11
-make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/rpm'
-make: *** [Makefile:45: pkgs] Error 2
-[root@lab03-cs01 iptables-daddr]#
+git clone https://github.com/yahoo/l3dsr.git
 ```
 
 ```
-[root@lab03-cs01 iptables-daddr]# dnf search kernel-abi
-Last metadata expiration check: 0:04:15 ago on Thu 04 Apr 2024 06:10:04 AM EDT.
-======================================================================= Name Matched: kernel-abi ========================================================================
-kernel-abi-stablelists.noarch : The Red Hat Enterprise Linux kernel ABI symbol stablelists
-[root@lab03-cs01 iptables-daddr]#
+cd l3dsr/linux/iptables-daddr/
 ```
 
 ```
-[root@lab03-cs01 iptables-daddr]# cat /etc/centos-release
-CentOS Stream release 9
+make
+```
 
-https://kojihub.stream.centos.org/koji/rpminfo?rpmID=60688
+```
+make libdir=/usr/lib64 install
+```
 
+```
+# echo "options xt_DADDR table=mangle" > /etc/modprobe.d/xt_DADDR.conf
+# cat /etc/modprobe.d/xt_DADDR.conf
+options xt_DADDR table=mangle
+```
+
+```
+systemctl reboot
+```
+
+Make sure the kernel module xt_DADDR.ko exists
+```
+# modinfo xt_DADDR
+filename:       /lib/modules/4.18.0-513.18.1.el8_9.x86_64/extra/xt_DADDR.ko
+alias:          ip6t_DADDR
+alias:          ipt_DADDR
+license:        GPL
+description:    Xtables: destination address modification
+author:         Verizon Media <linux-kernel-team@verizonmedia.com>
+rhelversion:    8.9
+srcversion:     450E188B765B10AD5B5CFA4
+depends:
+name:           xt_DADDR
+vermagic:       4.18.0-513.18.1.el8_9.x86_64 SMP mod_unload modversions
+parm:           table:type of table (default: raw) (charp)
+```
+
+```
+# ip addr add 172.26.0.10/32 dev lo label lo:1
+```
+
+```
+# iptables -t mangle -A INPUT -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
+
+```
+# iptables -t mangle -L -n
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination
+DADDR      all  --  0.0.0.0/0            0.0.0.0/0            DSCP match 0x02 DADDR set 172.26.0.10
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination
+```
+
+```
+# lsmod |grep xt_
+xt_DADDR               16384  1
+xt_dscp                16384  1
+```
+
+#### Rocky Linux 9.3
+
+```
+# cat /etc/rocky-release
+Rocky Linux release 9.3 (Blue Onyx)
+# uname -ri
+5.14.0-362.24.1.el9_3.x86_64 x86_64
+```
+
+```
+# cd l3dsr/linux/iptables-daddr/
+# make
+# make libdir=/usr/lib64 install
+# echo 'options xt_DADDR table=mangle' > /etc/modprobe.d/xt_DADDR.conf
+# systemctl reboot
+```
+
+```
+# modinfo xt_DADDR
+filename:       /lib/modules/5.14.0-362.24.1.el9_3.x86_64/extra/xt_DADDR.ko
+alias:          ip6t_DADDR
+alias:          ipt_DADDR
+license:        GPL
+description:    Xtables: destination address modification
+author:         Verizon Media <linux-kernel-team@verizonmedia.com>
+rhelversion:    9.3
+srcversion:     FACE9732EE5DD30EEEBD549
+depends:
+retpoline:      Y
+name:           xt_DADDR
+vermagic:       5.14.0-362.24.1.el9_3.x86_64 SMP preempt mod_unload modversions
+parm:           table:type of table (default: raw) (charp)
+```
+
+```
+# ip addr add 172.26.0.10/32 dev lo label lo:1
+
+# ip -4 a s lo
+1: lo: <LOOPBACK,UP,LOWER_UP> mtu 65536 qdisc noqueue state UNKNOWN group default qlen 1000
+    inet 127.0.0.1/8 scope host lo
+       valid_lft forever preferred_lft forever
+    inet 172.26.0.10/32 scope global lo:1
+       valid_lft forever preferred_lft forever
+
+# iptables -t mangle -A INPUT -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
+
+```
+# iptables -t mangle -L -n
+Chain PREROUTING (policy ACCEPT)
+target     prot opt source               destination
+
+Chain INPUT (policy ACCEPT)
+target     prot opt source               destination
+DADDR      all  --  0.0.0.0/0            0.0.0.0/0            DSCP match 0x02 DADDR set 172.26.0.10
+
+Chain FORWARD (policy ACCEPT)
+target     prot opt source               destination
+
+Chain OUTPUT (policy ACCEPT)
+target     prot opt source               destination
+
+Chain POSTROUTING (policy ACCEPT)
+target     prot opt source               destination
+```
+
+## Confirm L3DSR works
+
+Send DNS queries from the client.<br>
+UDP 53.
+```
+# dig @172.26.0.10 www.google.com
+
+; <<>> DiG 9.16.23-RH <<>> @172.26.0.10 www.google.com
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 18977
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;www.google.com.                        IN      A
+
+;; ANSWER SECTION:
+www.google.com.         300     IN      A       142.250.196.132
+
+;; Query time: 49 msec
+;; SERVER: 172.26.0.10#53(172.26.0.10)
+;; WHEN: Fri Apr 05 05:17:18 EDT 2024
+;; MSG SIZE  rcvd: 59
+```
+
+TCP 53
+```
+# dig @172.26.0.10 www.google.com +tcp
+
+; <<>> DiG 9.16.23-RH <<>> @172.26.0.10 www.google.com +tcp
+; (1 server found)
+;; global options: +cmd
+;; Got answer:
+;; ->>HEADER<<- opcode: QUERY, status: NOERROR, id: 64707
+;; flags: qr rd ra; QUERY: 1, ANSWER: 1, AUTHORITY: 0, ADDITIONAL: 1
+
+;; OPT PSEUDOSECTION:
+; EDNS: version: 0, flags:; udp: 512
+;; QUESTION SECTION:
+;www.google.com.                        IN      A
+
+;; ANSWER SECTION:
+www.google.com.         300     IN      A       142.250.196.132
+
+;; Query time: 180 msec
+;; SERVER: 172.26.0.10#53(172.26.0.10)
+;; WHEN: Fri Apr 05 05:18:21 EDT 2024
+;; MSG SIZE  rcvd: 59
+```
+
+<br>On the vpp:
+```
+# vppctl show lb vip verbose
+ ip4-l3dsr [1] 172.26.0.0/24
+  new_size:32
+  dscp:2
+  counters:
+    packet from existing sessions: 5
+    first session packet: 287
+    untracked packet: 0
+    no server configured: 0
+  #as:2
+    172.25.2.31 16 buckets   45 flows  dpo:20 used
+    172.25.2.30 16 buckets   53 flows  dpo:21 used
+```
+
+Here is a capture data collected on the server.<br>
+No1. vpp -> the server
+No2. the server -> client
+
+```
+# tshark -nn -r udp53.cap |grep 24a2
+Running as user "root" and group "root". This could be dangerous.
+    1   0.000000  172.25.0.30 → 172.25.2.31  DNS 97 Standard query 0x24a2 A www.google.com OPT
+    2   0.002509  172.26.0.10 → 172.25.0.30  DNS 101 Standard query response 0x24a2 A www.google.com A 142.250.196.132 OPT
+```
+
+```
+# tshark -nn -r udp53.cap -Y '(frame.number==1)' -V |grep ^Internet -A5
+Running as user "root" and group "root". This could be dangerous.
+Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
+    0100 .... = Version: 4
+    .... 0101 = Header Length: 20 bytes (5)
+    Differentiated Services Field: 0x08 (DSCP: Unknown, ECN: Not-ECT)
+        0000 10.. = Differentiated Services Codepoint: Unknown (2)
+        .... ..00 = Explicit Congestion Notification: Not ECN-Capable Transport (0)
+```
+
+```
+# tshark -nn -r udp53.cap -Y '(frame.number==2)' -V |grep ^Internet -A5
+Running as user "root" and group "root". This could be dangerous.
+Internet Protocol Version 4, Src: 172.26.0.10, Dst: 172.25.0.30
+    0100 .... = Version: 4
+    .... 0101 = Header Length: 20 bytes (5)
+    Differentiated Services Field: 0x00 (DSCP: CS0, ECN: Not-ECT)
+        0000 00.. = Differentiated Services Codepoint: Default (0)
+        .... ..00 = Explicit Congestion Notification: Not ECN-Capable Transport (0)
+```
+
+<br>Here is a capture of data collected on the server for TCP port 53.
+```
+# tshark -nn -r tcp53.cap  | grep 59995
+Running as user "root" and group "root". This could be dangerous.
+    1   0.000000  172.25.0.30 → 172.25.2.31  TCP 74 59995 → 53 [SYN] Seq=0 Win=64240 Len=0 MSS=1460 SACK_PERM=1 TSval=1532374090 TSecr=0 WS=128
+    2   0.000134  172.26.0.10 → 172.25.0.30  TCP 74 53 → 59995 [SYN, ACK] Seq=0 Ack=1 Win=65160 Len=0 MSS=1460 SACK_PERM=1 TSval=3042040255 TSecr=1532374090 WS=128
+    3   0.000589  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [ACK] Seq=1 Ack=1 Win=64256 Len=0 TSval=1532374091 TSecr=3042040255
+    5   0.003694  172.26.0.10 → 172.25.0.30  TCP 66 53 → 59995 [ACK] Seq=1 Ack=58 Win=65152 Len=0 TSval=3042040258 TSecr=1532374093
+    9   0.055125  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [ACK] Seq=58 Ack=62 Win=64256 Len=0 TSval=1532374145 TSecr=3042040309
+   10   0.055490  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [FIN, ACK] Seq=58 Ack=62 Win=64256 Len=0 TSval=1532374146 TSecr=3042040309
+   11   0.096435  172.26.0.10 → 172.25.0.30  TCP 66 53 → 59995 [ACK] Seq=62 Ack=59 Win=65152 Len=0 TSval=3042040351 TSecr=1532374146
+   12   1.055836  172.26.0.10 → 172.25.0.30  TCP 66 53 → 59995 [FIN, ACK] Seq=62 Ack=59 Win=65152 Len=0 TSval=3042041310 TSecr=1532374146
+   13   1.056543  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [ACK] Seq=59 Ack=63 Win=64256 Len=0 TSval=1532375147 TSecr=3042041310
+```
+
+```
+# tshark -nn -r tcp53.cap -Y '(frame.number==1)' -V |grep ^Internet -A5
+Running as user "root" and group "root". This could be dangerous.
+Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
+    0100 .... = Version: 4
+    .... 0101 = Header Length: 20 bytes (5)
+    Differentiated Services Field: 0x08 (DSCP: Unknown, ECN: Not-ECT)
+        0000 10.. = Differentiated Services Codepoint: Unknown (2)
+        .... ..00 = Explicit Congestion Notification: Not ECN-Capable Transport (0)
 ```
