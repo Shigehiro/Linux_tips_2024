@@ -1,0 +1,32 @@
+set interfaces ethernet eth0 address 'dhcp'
+set interfaces ethernet eth0 hw-id '52:54:00:d1:0b:51'
+set interfaces ethernet eth1 address '172.25.0.20/24'
+set interfaces ethernet eth1 hw-id '52:54:00:9e:4b:c6'
+set interfaces ethernet eth2 address '172.25.1.20/24'
+set interfaces ethernet eth2 hw-id '52:54:00:d5:06:6d'
+set interfaces ethernet eth3 address '172.25.2.20/24'
+set interfaces ethernet eth3 hw-id '52:54:00:83:2f:06'
+set interfaces loopback lo
+set nat source rule 1 outbound-interface name 'eth0'
+set nat source rule 1 source address '172.25.2.0/24'
+set nat source rule 1 translation address 'masquerade'
+set service ntp allow-client address '0.0.0.0/0'
+set service ntp allow-client address '::/0'
+set service ntp server time1.vyos.net
+set service ntp server time2.vyos.net
+set service ntp server time3.vyos.net
+set service ssh
+set system config-management commit-revisions '100'
+set system conntrack modules ftp
+set system conntrack modules h323
+set system conntrack modules nfs
+set system conntrack modules pptp
+set system conntrack modules sip
+set system conntrack modules sqlnet
+set system conntrack modules tftp
+set system console device ttyS0 speed '115200'
+set system host-name 'vyos'
+set system login user vyos authentication encrypted-password '$6$rounds=656000$M5UQcy12Z5z/.eBm$DyVjOT.TujJqEbXgzfWkbudRr6X4/F76Yx.PHk4A4bv2a3bc.DQdiv1y7oMmyU1NPU5v8/HQl4h1du4XyCsjF0'
+set system login user vyos authentication plaintext-password ''
+set system syslog global facility all level 'info'
+set system syslog global facility local7 level 'debug'
