@@ -277,7 +277,7 @@ vppctl lb as 172.26.0.10/24 port 0 172.25.2.30 172.25.2.31
 
 <br>On the client, send DNS queries.<br>
 
-Confiure static routes if needed.( )
+Confiure static routes if needed.
 ```
 # nmcli con show eth1 |grep ^ipv4.routes
 ipv4.routes:                            { ip = 172.25.2.0/24, nh = 172.25.0.20 }; { ip = 172.26.0.10/32, nh = 172.25.0.10 }
