@@ -599,12 +599,14 @@ Internet Protocol Version 4, Src: 172.26.0.10, Dst: 172.25.0.30
 
 <br>Here is a capture of data collected on the server for TCP port 53.
 ```
-# tshark -nn -r tcp53.cap  | grep 59995
+# tshark  -n -r tcp53.cap -Y '(tcp.port==59995)'
 Running as user "root" and group "root". This could be dangerous.
     1   0.000000  172.25.0.30 → 172.25.2.31  TCP 74 59995 → 53 [SYN] Seq=0 Win=64240 Len=0 MSS=1460 SACK_PERM=1 TSval=1532374090 TSecr=0 WS=128
     2   0.000134  172.26.0.10 → 172.25.0.30  TCP 74 53 → 59995 [SYN, ACK] Seq=0 Ack=1 Win=65160 Len=0 MSS=1460 SACK_PERM=1 TSval=3042040255 TSecr=1532374090 WS=128
     3   0.000589  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [ACK] Seq=1 Ack=1 Win=64256 Len=0 TSval=1532374091 TSecr=3042040255
+    4   0.003661  172.25.0.30 → 172.25.2.31  DNS 123 Standard query 0x53ee A www.google.com OPT
     5   0.003694  172.26.0.10 → 172.25.0.30  TCP 66 53 → 59995 [ACK] Seq=1 Ack=58 Win=65152 Len=0 TSval=3042040258 TSecr=1532374093
+    8   0.054429  172.26.0.10 → 172.25.0.30  DNS 127 Standard query response 0x53ee A www.google.com A 142.250.196.132 OPT
     9   0.055125  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [ACK] Seq=58 Ack=62 Win=64256 Len=0 TSval=1532374145 TSecr=3042040309
    10   0.055490  172.25.0.30 → 172.25.2.31  TCP 66 59995 → 53 [FIN, ACK] Seq=58 Ack=62 Win=64256 Len=0 TSval=1532374146 TSecr=3042040309
    11   0.096435  172.26.0.10 → 172.25.0.30  TCP 66 53 → 59995 [ACK] Seq=62 Ack=59 Win=65152 Len=0 TSval=3042040351 TSecr=1532374146
