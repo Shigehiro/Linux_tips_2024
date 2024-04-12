@@ -15,6 +15,9 @@
       - [Rocky Linux 8.9](#rocky-linux-89)
       - [Rocky Linux 9.3](#rocky-linux-93)
   - [Confirm L3DSR works](#confirm-l3dsr-works)
+  - [L3 DSR DSCP Kernel module build results](#l3-dsr-dscp-kernel-module-build-results)
+    - [CentOS Stream 9 Error logs](#centos-stream-9-error-logs)
+    - [Fedora 39 Error logs](#fedora-39-error-logs)
 
 ## Description
 
@@ -623,4 +626,82 @@ Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
     Differentiated Services Field: 0x08 (DSCP: Unknown, ECN: Not-ECT)
         0000 10.. = Differentiated Services Codepoint: Unknown (2)
         .... ..00 = Explicit Congestion Notification: Not ECN-Capable Transport (0)
+```
+
+## L3 DSR DSCP Kernel module build results
+
+|OS|Kernel|GCC|Kernel module<br>Git commit ID|Result|
+|:---|:---|:---|:---|:---|
+|Rocky Linux release 8.9|4.18.0-513.18.1.el8_9.x86_64|8.5.0 20210514 (Red Hat 8.5.0-20)|Master branch<br>8928361|OK|
+|Rocky Linux release 9.3 |5.14.0-362.24.1.el9_3.0.1.x86_64|11.4.1 20230605 (Red Hat 11.4.1-2)|Master branch<br>8928361|OK|
+|CentOS Stream release 9|5.14.0-435.el9.x86_64 x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
+|Fedora release 39|6.8.4-200.fc39.x86_64|13.2.1 20240316 (Red Hat 13.2.1-7)|Master branch<br>8928361|Failed|
+
+### CentOS Stream 9 Error logs
+
+```
+# git log --oneline | head -1
+8928361 Replace ifconfig calls with ip calls in all tests.
+
+# cat /etc/centos-release ;uname -ri ; gcc --version|head -1
+CentOS Stream release 9
+5.14.0-435.el9.x86_64 x86_64
+gcc (GCC) 11.4.1 20231218 (Red Hat 11.4.1-3)
+
+# make;echo $?
+make -C '/lib/modules/5.14.0-435.el9.x86_64/build' M='/root/l3dsr/linux/iptables-daddr/kmod-xt'
+make[1]: Entering directory '/usr/src/kernels/5.14.0-435.el9.x86_64'
+  CC [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.o
+  MODPOST /root/l3dsr/linux/iptables-daddr/kmod-xt/Module.symvers
+  CC [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.mod.o
+  LD [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko
+  BTF [M] /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko
+Skipping BTF generation for /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko due to unavailability of vmlinux
+make[1]: Leaving directory '/usr/src/kernels/5.14.0-435.el9.x86_64'
+make -C 'extensions-1.4'
+make[1]: Entering directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
+cc -O2 -g -Wall -Wunused -fPIC -I../kmod-xt  -c -o libxt_DADDR.o libxt_DADDR.c
+cc   -shared -o libxt_DADDR.so libxt_DADDR.o
+/usr/bin/ld: libxt_DADDR.o: in function `_init':
+/root/l3dsr/linux/iptables-daddr/extensions-1.4/libxt_DADDR.c:267: multiple definition of `_init'; /usr/lib/gcc/x86_64-redhat-linux/11/../../../../lib64/crti.o:(.init+0x0): first defined here
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:36: libxt_DADDR.so] Error 1
+rm libxt_DADDR.o
+make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
+make: *** [Makefile:35: all] Error 2
+```
+
+### Fedora 39 Error logs
+
+```
+# git log --oneline |head -1
+8928361 Replace ifconfig calls with ip calls in all tests.
+
+# cat /etc/fedora-release ; uname -ri ; gcc --version |head -1
+Fedora release 39 (Thirty Nine)
+6.8.4-200.fc39.x86_64 unknown
+gcc (GCC) 13.2.1 20240316 (Red Hat 13.2.1-7)
+
+# make;echo $?
+make -C '/lib/modules/6.8.4-200.fc39.x86_64/build' M='/root/l3dsr/linux/iptables-daddr/kmod-xt'
+make[1]: Entering directory '/usr/src/kernels/6.8.4-200.fc39.x86_64'
+  CC [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.o
+  MODPOST /root/l3dsr/linux/iptables-daddr/kmod-xt/Module.symvers
+  CC [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.mod.o
+  LD [M]  /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko
+  BTF [M] /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko
+Skipping BTF generation for /root/l3dsr/linux/iptables-daddr/kmod-xt/xt_DADDR.ko due to unavailability of vmlinux
+make[1]: Leaving directory '/usr/src/kernels/6.8.4-200.fc39.x86_64'
+make -C 'extensions-1.4'
+make[1]: Entering directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
+cc -O2 -g -Wall -Wunused -fPIC -I../kmod-xt  -c -o libxt_DADDR.o libxt_DADDR.c
+cc   -shared -o libxt_DADDR.so libxt_DADDR.o
+/usr/bin/ld: libxt_DADDR.o: in function `_init':
+/root/l3dsr/linux/iptables-daddr/extensions-1.4/libxt_DADDR.c:267: multiple definition of `_init'; /usr/lib/gcc/x86_64-redhat-linux/13/../../../../lib64/crti.o:(.init+0x0): first defined here
+collect2: error: ld returned 1 exit status
+make[1]: *** [Makefile:36: libxt_DADDR.so] Error 1
+rm libxt_DADDR.o
+make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
+make: *** [Makefile:35: all] Error 2
+2
 ```
