@@ -18,6 +18,7 @@
   - [L3 DSR DSCP Kernel module build results](#l3-dsr-dscp-kernel-module-build-results)
     - [CentOS Stream 9 Error logs](#centos-stream-9-error-logs)
     - [Fedora 39 Error logs](#fedora-39-error-logs)
+    - [CentOS Stream 8 logs](#centos-stream-8-logs)
 
 ## Description
 
@@ -634,7 +635,8 @@ Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
 |:---|:---|:---|:---|:---|
 |Rocky Linux release 8.9|4.18.0-513.18.1.el8_9.x86_64|8.5.0 20210514 (Red Hat 8.5.0-20)|Master branch<br>8928361|OK|
 |Rocky Linux release 9.3 |5.14.0-362.24.1.el9_3.0.1.x86_64|11.4.1 20230605 (Red Hat 11.4.1-2)|Master branch<br>8928361|OK|
-|CentOS Stream release 9|5.14.0-435.el9.x86_64 x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
+|CentOS Stream release 8|4.18.0-552.el8.x86_64|8.5.0 20210514 (Red Hat 8.5.0-21)|Master branch<br>8928361|OK|
+|CentOS Stream release 9|5.14.0-435.el9.x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
 |Fedora release 39|6.8.4-200.fc39.x86_64|13.2.1 20240316 (Red Hat 13.2.1-7)|Master branch<br>8928361|Failed|
 
 ### CentOS Stream 9 Error logs
@@ -704,4 +706,50 @@ rm libxt_DADDR.o
 make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
 make: *** [Makefile:35: all] Error 2
 2
+```
+
+### CentOS Stream 8 logs
+```
+# git log --oneline |head -1
+8928361 Replace ifconfig calls with ip calls in all tests.
+
+# cat /etc/centos-release ; uname -ri ; gcc --version | head -1
+CentOS Stream release 8
+4.18.0-552.el8.x86_64 x86_64
+gcc (GCC) 8.5.0 20210514 (Red Hat 8.5.0-21)
+
+# modinfo xt_DADDR
+filename:       /lib/modules/4.18.0-552.el8.x86_64/extra/xt_DADDR.ko
+alias:          ip6t_DADDR
+alias:          ipt_DADDR
+license:        GPL
+description:    Xtables: destination address modification
+author:         Verizon Media <linux-kernel-team@verizonmedia.com>
+rhelversion:    8.10
+srcversion:     450E188B765B10AD5B5CFA4
+depends:
+name:           xt_DADDR
+vermagic:       4.18.0-552.el8.x86_64 SMP mod_unload modversions
+parm:           table:type of table (default: raw) (charp)
+
+# lsmod |grep xt_
+xt_DADDR               16384  1
+xt_dscp                16384  1
+
+# iptables -L -n -t mangle -v
+Chain PREROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain INPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+  140 11230 DADDR      all  --  *      *       0.0.0.0/0            0.0.0.0/0            DSCP match 0x02 DADDR set 172.26.0.10
+
+Chain FORWARD (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
+
+Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
+ pkts bytes target     prot opt in     out     source               destination
 ```
