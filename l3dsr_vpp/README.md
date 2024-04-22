@@ -19,6 +19,8 @@
     - [CentOS Stream 9 Error logs](#centos-stream-9-error-logs)
     - [Fedora 39 Error logs](#fedora-39-error-logs)
     - [CentOS Stream 8 logs](#centos-stream-8-logs)
+  - [Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy](#confirm-whether-the-dscp-kernel-module-works-with-both-ipv4-and-ipv6-using-python-scapy)
+
 
 ## Description
 
@@ -752,4 +754,52 @@ Chain OUTPUT (policy ACCEPT 0 packets, 0 bytes)
 
 Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
  pkts bytes target     prot opt in     out     source               destination
+```
+
+## Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy
+
+On the server, configure iptables|ip6tales to re-write Src addresses:
+```
+ip addr add 172.26.0.10/32 dev lo label lo:1
+ip addr add 2001:db8:1::100/128 dev lo label lo:2
+ip6tables -t mangle -A INPUT -m dscp --dscp 2 -j DADDR --set-daddr=2001:db8:1::100
+iptables -t mangle -A INPUT -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
+
+On the Scapy node, configure IPv4 and IPv6
+```
+nmcli con mod eth0 ipv6.method manual ipv6.addresses 2001:db8:1::c/64
+```
+
+On the server, run the tcpdump.
+```
+# tcpdump -nn -i eth0 port 53 -w port53.cap
+```
+
+[Run the script](./send_dns_with_dscp.py)
+```
+# ./send_dns_with_dscp.py
+Sent DNS UDP over IPv6
+Sent TCP 53 SYN over IPv6
+Sent DNS UDP over IPv4
+Sent TCP 53 SYN over IPv4
+```
+
+Here is the capture data collected on the server:
+- IPv6 UDP(No1,2)
+  - Looking at No2, you can see the server re-wrote its Src IP from 2001:db8:1::a to 2001:db8:1::100
+- IPv6 TCP SYN 53(No3,4)
+- IPv4 UDP(No5,6)
+- IPv4 TCP SYN 53(No7,8)
+```
+# tshark -nn -r port53.cap
+Running as user "root" and group "root". This could be dangerous.
+    1   0.000000 2001:db8:1::c → 2001:db8:1::a DNS 92 Standard query 0x0000 TXT version.bind
+    2   0.000206 2001:db8:1::100 → 2001:db8:1::c DNS 111 Standard query response 0x0000 TXT version.bind TXT
+    3   0.016484 2001:db8:1::c → 2001:db8:1::a TCP 74 40508 → 53 [SYN] Seq=0 Win=8192 Len=0
+    4   0.016535 2001:db8:1::100 → 2001:db8:1::c TCP 78 53 → 40508 [SYN, ACK] Seq=0 Ack=1 Win=28800 Len=0 MSS=1440
+    5   0.052722  172.25.2.33 → 172.25.2.30  DNS 72 Standard query 0x0000 TXT version.bind
+    6   0.052883  172.26.0.10 → 172.25.2.33  DNS 91 Standard query response 0x0000 TXT version.bind TXT
+    7   0.070183  172.25.2.33 → 172.25.2.30  TCP 54 40509 → 53 [SYN] Seq=0 Win=8192 Len=0
+    8   0.070224  172.26.0.10 → 172.25.2.33  TCP 58 53 → 40509 [SYN, ACK] Seq=0 Ack=1 Win=29200 Len=0 MSS=1460
 ```
