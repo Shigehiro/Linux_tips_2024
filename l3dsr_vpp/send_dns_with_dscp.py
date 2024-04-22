@@ -43,6 +43,6 @@ def ipv4_tcp_syn53(DSCP_SCAPY):
 if __name__ == "__main__":
   DSCP_SCAPY = convert_dscp_for_scapy(DSCP=2)
   ipv6_dns_udp(DSCP_SCAPY=DSCP_SCAPY)
-  ipv6_tcp_syn53(DSCP_SCAPY)
+  ipv6_tcp_syn53(DSCP_SCAPY=DSCP_SCAPY)
   ipv4_dns_udp(DSCP_SCAPY=DSCP_SCAPY)
-  ipv4_tcp_syn53(DSCP_SCAPY)
+  ipv4_tcp_syn53(DSCP_SCAPY=DSCP_SCAPY)
