@@ -790,7 +790,7 @@ Here is the capture data collected on the server:
   - Looking at No2, you can see the server re-wrote its Src IP from 2001:db8:1::a to 2001:db8:1::100
 - IPv6 TCP SYN 53(No3,4)
 - IPv4 UDP(No5,6)
-  - Looking at No6, the server re-wrote ist Src IP from 172.25.2.30 to 172.26.0.10
+  - Looking at No6, the server re-wrote its Src IP from 172.25.2.30 to 172.26.0.10
 - IPv4 TCP SYN 53(No7,8)
 ```
 # tshark -nn -r port53.cap
