@@ -638,7 +638,7 @@ Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
 |:---|:---|:---|:---|:---|
 |Rocky Linux release 8.9|4.18.0-513.18.1.el8_9.x86_64|8.5.0 20210514 (Red Hat 8.5.0-20)|Master branch<br>8928361|OK|
 |Rocky Linux release 9.3 |5.14.0-362.24.1.el9_3.0.1.x86_64|11.4.1 20230605 (Red Hat 11.4.1-2)|Master branch<br>8928361|OK|
-|Rocky Linux release 9.4 |5.14.0-427.16.1.el9_4.x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|NG|
+|Rocky Linux release 9.4 |5.14.0-427.16.1.el9_4.x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
 |CentOS Stream release 8|4.18.0-552.el8.x86_64|8.5.0 20210514 (Red Hat 8.5.0-21)|Master branch<br>8928361|OK|
 |CentOS Stream release 9|5.14.0-435.el9.x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
 |Fedora release 39|6.8.4-200.fc39.x86_64|13.2.1 20240316 (Red Hat 13.2.1-7)|Master branch<br>8928361|Failed|
