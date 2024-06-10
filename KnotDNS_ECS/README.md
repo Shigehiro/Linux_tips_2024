@@ -43,7 +43,7 @@ cp knot.conf /etc/knot/
 ```
 
 ```
-cp mkdir /var/lib/knot/zones /var/lib/knot/zones
+cp example.com.zone /var/lib/knot/zones
 ```
 
 ```
