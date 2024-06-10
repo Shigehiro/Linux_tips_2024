@@ -5,3 +5,4 @@
 - [Load Balancing DNS Traffic with L3 DSR using LVS (IP-in-IP)](./lvs_l3dsr/README.md)
 - [Run systemd(init) container under Ubuntu 24.04 Docker CE(cgroup v1)](./ubuntu24.04_docker_systemd_cgroupv1/README.md)
 - [Build and Use DNS shotgun. DNS traffic generator by replaying a pcap](./DNS_shotgun/README.md)
+- [How to configure ECS with KnotDNS](./KnotDNS_ECS/README.md)
