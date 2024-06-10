@@ -51,6 +51,10 @@ cp net.conf /etc/knot/
 ```
 
 ```
+chown knot:knot /etc/knot/*.conf
+```
+
+```
 systemctl start knot.service
 ```
 
