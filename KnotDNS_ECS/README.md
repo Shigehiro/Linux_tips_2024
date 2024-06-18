@@ -18,6 +18,8 @@ Here is how to configure ECS(EDNS Client Subnet) with Knot DNS.
 
 ## Install and configure ECS
 
+**Set SELINUX to permissive<br>**
+
 ```
 # cat /etc/centos-release ;uname -ri
 CentOS Stream release 9
