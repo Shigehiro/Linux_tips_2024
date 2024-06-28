@@ -12,7 +12,7 @@ that AppArmor was blocking this action. Here is how to solve this issue.
 
 ## How to fix
 
-Add the blown line and restart the apparmor.
+Add the following line and restart the apparmor.
 ```
 $ sudo grep libvirt/images /etc/apparmor.d/abstractions/libvirt-qemu
   /var/lib/libvirt/images/** rwk,
