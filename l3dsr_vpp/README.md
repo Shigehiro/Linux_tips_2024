@@ -1,33 +1,34 @@
-# L3 DSR based on DSCP with vpp
+# 1. L3 DSR based on DSCP with vpp
 
-- [L3 DSR based on DSCP with vpp](#l3-dsr-based-on-dscp-with-vpp)
-  - [Description](#description)
-  - [Tested Network Toplogy](#tested-network-toplogy)
-  - [Reference](#reference)
-  - [About vpp](#about-vpp)
-  - [Install vpp](#install-vpp)
-  - [Configure L3 DSR](#configure-l3-dsr)
-    - [Client requests](#client-requests)
-    - [Server responses](#server-responses)
-    - [Configure vpp for L3 DSR](#configure-vpp-for-l3-dsr)
-  - [Configure the server to rewrite its SrcIP based on DSCP](#configure-the-server-to-rewrite-its-srcip-based-on-dscp)
-    - [Install DSCP kernel module](#install-dscp-kernel-module)
-      - [Rocky Linux 8.9](#rocky-linux-89)
-      - [Rocky Linux 9.3](#rocky-linux-93)
-  - [Confirm L3DSR works](#confirm-l3dsr-works)
-  - [L3 DSR DSCP Kernel module build results](#l3-dsr-dscp-kernel-module-build-results)
-    - [CentOS Stream 9 Error logs](#centos-stream-9-error-logs)
-    - [Fedora 39 Error logs](#fedora-39-error-logs)
-    - [Rocky Linux 9.4 Error logs](#rocky-linux-94-error-logs)
-    - [CentOS Stream 8 logs](#centos-stream-8-logs)
-  - [Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy](#confirm-whether-the-dscp-kernel-module-works-with-both-ipv4-and-ipv6-using-python-scapy)
+- [1. L3 DSR based on DSCP with vpp](#1-l3-dsr-based-on-dscp-with-vpp)
+  - [1.1. Description](#11-description)
+  - [1.2. Tested Network Toplogy](#12-tested-network-toplogy)
+  - [1.3. Reference](#13-reference)
+  - [1.4. About vpp](#14-about-vpp)
+  - [1.5. Install vpp](#15-install-vpp)
+  - [1.6. Configure L3 DSR](#16-configure-l3-dsr)
+    - [1.6.1. Client requests](#161-client-requests)
+    - [1.6.2. Server responses](#162-server-responses)
+    - [1.6.3. Configure vpp for L3 DSR](#163-configure-vpp-for-l3-dsr)
+  - [1.7. Configure the server to rewrite its SrcIP based on DSCP](#17-configure-the-server-to-rewrite-its-srcip-based-on-dscp)
+    - [1.7.1. Install DSCP kernel module](#171-install-dscp-kernel-module)
+      - [1.7.1.1. Rocky Linux 8.9](#1711-rocky-linux-89)
+      - [1.7.1.2. Rocky Linux 9.3](#1712-rocky-linux-93)
+  - [1.8. Confirm L3DSR works](#18-confirm-l3dsr-works)
+  - [1.9. L3 DSR DSCP Kernel module build results](#19-l3-dsr-dscp-kernel-module-build-results)
+    - [1.9.1. CentOS Stream 9 Error logs](#191-centos-stream-9-error-logs)
+    - [1.9.2. Fedora 39 Error logs](#192-fedora-39-error-logs)
+    - [1.9.3. Rocky Linux 9.4 Error logs](#193-rocky-linux-94-error-logs)
+    - [1.9.4. CentOS Stream 8 logs](#194-centos-stream-8-logs)
+  - [1.10. Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy](#110-confirm-whether-the-dscp-kernel-module-works-with-both-ipv4-and-ipv6-using-python-scapy)
+  - [1.11. How to load vpp configuration from a text file when starting vpp](#111-how-to-load-vpp-configuration-from-a-text-file-when-starting-vpp)
 
 
-## Description
+## 1.1. Description
 
 Here is how to configure L3 DSR based on DSCP with vpp
 
-## Tested Network Toplogy
+## 1.2. Tested Network Toplogy
 
 All nodes are running as Virtual Machine under KVM.
 ```
@@ -41,17 +42,17 @@ client ---L2SW------ vpp ------------- vyos ------ two servers
 VIP for LB : 172.26.0.10
 ```
 
-## Reference
+## 1.3. Reference
 
 - https://events19.linuxfoundation.org/wp-content/uploads/2018/07/ONS.NA_.2019.VPP_LB_public.pdf
 - https://www.loadbalancer.org/blog/yahoos-l3-direct-server-return-an-alternative-to-lvs-tun-explored/
 - https://github.com/yahoo/l3dsr
 
-## About vpp
+## 1.4. About vpp
 
 See https://s3-docs.fd.io/vpp/24.06/index.html
 
-## Install vpp
+## 1.5. Install vpp
 
 Reference: https://wiki.fd.io/view/VPP/Installing_VPP_binaries_from_packages#Intro
 
@@ -173,7 +174,7 @@ Send ping from the vpp box to the other nodes.
 116 bytes from 172.25.1.20: icmp_seq=2 ttl=64 time=.3527 ms
 ```
 
-## Configure L3 DSR
+## 1.6. Configure L3 DSR
 
 Reference: https://docs.fd.io/vpp/24.06/developer/plugins/lb.html<br>
 
@@ -190,7 +191,7 @@ VIP for LB : 172.26.0.10
 
 The L3 SW has three networks, 172.25.[0-2].20<br>
 
-### Client requests
+### 1.6.1. Client requests
 
 Client -> L2SW -> vpp -> L3SW -> two servers
   
@@ -206,7 +207,7 @@ Src IP : 172.25.0.30
 Dst IP : 172.25.2.30 or 31 ( vpp will add specified DSCP number )
 ```
 
-### Server responses
+### 1.6.2. Server responses
 
 Two servers -> L3 SW -> Client
 ```
@@ -214,7 +215,7 @@ Src IP : 172.26.0.10 ( The server should rewrite its srcIP as VIP based on DSCP 
 Dst IP : 172.25.0.30
 ```
 
-### Configure vpp for L3 DSR
+### 1.6.3. Configure vpp for L3 DSR
 
 <br>lb_plugin.so must be loaded to use Load Balancing.
 ```
@@ -338,11 +339,11 @@ vppctl lb vip 172.26.0.10/24 encap l3dsr dscp 2 port 0 new_len 32
 vppctl lb as 172.26.0.10/24 port 0 172.25.2.30 172.25.2.31
 ```
 
-## Configure the server to rewrite its SrcIP based on DSCP
+## 1.7. Configure the server to rewrite its SrcIP based on DSCP
 
-### Install DSCP kernel module
+### 1.7.1. Install DSCP kernel module
 
-#### Rocky Linux 8.9
+#### 1.7.1.1. Rocky Linux 8.9
 
 ```
 # cat /etc/rocky-release
@@ -436,7 +437,7 @@ xt_DADDR               16384  1
 xt_dscp                16384  1
 ```
 
-#### Rocky Linux 9.3
+#### 1.7.1.2. Rocky Linux 9.3
 
 ```
 # cat /etc/rocky-release
@@ -502,7 +503,7 @@ Chain POSTROUTING (policy ACCEPT)
 target     prot opt source               destination
 ```
 
-## Confirm L3DSR works
+## 1.8. Confirm L3DSR works
 
 Send DNS queries from the client.<br>
 UDP 53.
@@ -632,7 +633,7 @@ Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
         .... ..00 = Explicit Congestion Notification: Not ECN-Capable Transport (0)
 ```
 
-## L3 DSR DSCP Kernel module build results
+## 1.9. L3 DSR DSCP Kernel module build results
 
 |OS|Kernel|GCC|Kernel module<br>Git commit ID|Result|
 |:---|:---|:---|:---|:---|
@@ -644,7 +645,7 @@ Internet Protocol Version 4, Src: 172.25.0.30, Dst: 172.25.2.31
 |CentOS Stream release 9|5.14.0-435.el9.x86_64|11.4.1 20231218 (Red Hat 11.4.1-3)|Master branch<br>8928361|Failed|
 |Fedora release 39|6.8.4-200.fc39.x86_64|13.2.1 20240316 (Red Hat 13.2.1-7)|Master branch<br>8928361|Failed|
 
-### CentOS Stream 9 Error logs
+### 1.9.1. CentOS Stream 9 Error logs
 
 ```
 # git log --oneline | head -1
@@ -678,7 +679,7 @@ make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
 make: *** [Makefile:35: all] Error 2
 ```
 
-### Fedora 39 Error logs
+### 1.9.2. Fedora 39 Error logs
 
 ```
 # git log --oneline |head -1
@@ -713,7 +714,7 @@ make: *** [Makefile:35: all] Error 2
 2
 ```
 
-### Rocky Linux 9.4 Error logs
+### 1.9.3. Rocky Linux 9.4 Error logs
 
 ```
 [root@r94 ~]# cat /etc/rocky-release;uname -ir ; gcc --version|head -1
@@ -747,7 +748,7 @@ make[1]: Leaving directory '/root/l3dsr/linux/iptables-daddr/extensions-1.4'
 make: *** [Makefile:35: all] Error 2
 ```
 
-### CentOS Stream 8 logs
+### 1.9.4. CentOS Stream 8 logs
 ```
 # git log --oneline |head -1
 8928361 Replace ifconfig calls with ip calls in all tests.
@@ -793,7 +794,7 @@ Chain POSTROUTING (policy ACCEPT 0 packets, 0 bytes)
  pkts bytes target     prot opt in     out     source               destination
 ```
 
-## Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy
+## 1.10. Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy
 
 On the server, configure iptables|ip6tables to re-write its Src address:
 ```
@@ -840,4 +841,29 @@ Running as user "root" and group "root". This could be dangerous.
     6   0.052883  172.26.0.10 → 172.25.2.33  DNS 91 Standard query response 0x0000 TXT version.bind TXT
     7   0.070183  172.25.2.33 → 172.25.2.30  TCP 54 40509 → 53 [SYN] Seq=0 Win=8192 Len=0
     8   0.070224  172.26.0.10 → 172.25.2.33  TCP 58 53 → 40509 [SYN, ACK] Seq=0 Ack=1 Win=29200 Len=0 MSS=1460
+```
+
+## 1.11. How to load vpp configuration from a text file when starting vpp
+
+/etc/vpp/startup.conf
+```
+# grep -E 'unix|startup-config' /etc/vpp/startup.conf
+unix {
+  startup-config /usr/share/vpp/scripts/vpp-config.txt
+```
+
+/usr/share/vpp/scripts/vpp-config.txt
+```
+# configure interface
+set int ip address GigabitEthernet7/0/0 172.25.0.10/24
+set int ip address GigabitEthernet8/0/0 172.25.1.10/24
+set int state GigabitEthernet7/0/0 up
+set int state GigabitEthernet8/0/0 up
+
+# configure static route
+ip route add 172.25.2.0/24 via 172.25.1.20 GigabitEthernet8/0/0
+
+# configure load balancer plugin
+lb conf timeout 3
+lb vip 172.26.0.10/24 encap l3dsr dscp 2 po
 ```

@@ -7,3 +7,4 @@
 - [Build and Use DNS shotgun. DNS traffic generator by replaying a pcap](./DNS_shotgun/README.md)
 - [How to configure ECS with KnotDNS](./KnotDNS_ECS/README.md)
 - [How to fix: Apparmor permission denies /var/lib/libvirt/images](./ubuntu24.04_apparmor_denied/README.md)
+- [Kernel tuning for fd.io VPP](./kernel_tuning_vpp/README.md)
