@@ -784,4 +784,20 @@ firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 
 firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
 ```
 
-You can check the configuration from `/etc/firewalld/direct.xml` or `firewall-cmd --direct --get-all-rules`.
+You can check the configuration from `/etc/firewalld/direct.xml` or `firewall-cmd --direct --get-all-rules`.<br>
+
+If you do not need to enable connection tracking against the all UDP/TCP ports, run the below.
+```
+firewall-cmd --set-default-zone=trusted
+
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p udp -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p tcp -j NOTRACK
+
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p udp -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p tcp -j NOTRACK
+
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p udp -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp -j ACCEPT
+
+firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
