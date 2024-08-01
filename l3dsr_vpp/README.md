@@ -746,6 +746,10 @@ nmcli con mod lo +ipv4.addresses 172.26.0.10/32
 
 ## 1.13. How to configure L3DSR DSCP rules with firewalld
 
+You may want to disalbe connection tracking regarding TCP/UDP 53.<br>
+
+See [How can I disable connection tracking (conntrack) with firewalld?](https://access.redhat.com/solutions/2991381)
+
 Ensure firewalld is running and the other services, nftables and iptables, are not running.
 ```
 # systemctl is-enabled firewalld.service nftables.service iptables.service
@@ -764,19 +768,28 @@ active
 ```
 
 ```
-# firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
-success
+firewall-cmd --direct --add-rule ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
+firewall-cmd --direct --add-rule ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --direct --add-rule ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
+firewall-cmd --direct --add-rule ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --direct --add-rule ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
+firewall-cmd --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 99 -m dscp --dscp 2 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
 ```
 
 ```
 # firewall-cmd --direct --get-all-rules
-ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
+ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
+ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
+ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
+ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
+ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
 ```
 
 ```
-# cat /etc/firewalld/direct.xml
-<?xml version="1.0" encoding="utf-8"?>
-<direct>
-  <rule ipv="ipv4" table="mangle" chain="INPUT" priority="100">-m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10</rule>
-</direct>
+# conntrack -L |grep -w "dport=53" -c
+conntrack v1.4.7 (conntrack-tools): 12 flow entries have been shown.
+0
 ```
