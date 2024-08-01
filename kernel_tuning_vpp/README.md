@@ -231,16 +231,16 @@ plugins {
 
 dpdk {
   dev 0000:07:00.0 {
-#    num-rx-queues 2
-#    num-rx-desc 512
-#    num-tx-desc 512
+    num-rx-queues 2
+    num-rx-desc 512
+    num-tx-desc 512
 
    }
 
   dev 0000:08:00.0 {
-#    num-rx-queues 2
-#    num-rx-desc 512
-#    num-tx-desc 512
+    num-rx-queues 2
+    num-rx-desc 512
+    num-tx-desc 512
    }
 }
 ```
