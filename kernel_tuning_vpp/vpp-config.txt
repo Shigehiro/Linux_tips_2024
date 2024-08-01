@@ -1,0 +1,13 @@
+# configure interface
+set int ip address GigabitEthernet7/0/0 172.25.0.10/24
+set int ip address GigabitEthernet8/0/0 172.25.1.10/24
+set int state GigabitEthernet7/0/0 up
+set int state GigabitEthernet8/0/0 up
+
+# configure static route
+ip route add 172.25.2.0/24 via 172.25.1.20 GigabitEthernet8/0/0
+
+# configure load balancer plugin
+lb conf timeout 3
+lb vip 172.26.0.10/24 encap l3dsr dscp 2 port 0 new_len 32
+lb as 172.26.0.10/24 port 0 172.25.2.31

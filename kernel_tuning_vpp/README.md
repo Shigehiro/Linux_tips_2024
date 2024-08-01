@@ -23,6 +23,7 @@ Here is how tune kernel for VPP.
 - [VPP/How To Optimize Performance (System Tuning)](https://wiki.fd.io/view/VPP/How_To_Optimize_Performance_(System_Tuning))
 - [Multi-threading in VPP](https://s3-docs.fd.io/vpp/24.10/developer/corearchitecture/multi_thread.html)
 - [Huge Pages](https://fd.io/docs/vpp/v2101/gettingstarted/users/configuring/hugepages.html)
+- [Metrics and tools for tuning](https://ubuntu.com/blog/real-time-kernel-tuning)
 - [Optimizing RHEL 9 for Real Time for low latency operation](https://docs.redhat.com/en/documentation/red_hat_enterprise_linux_for_real_time/9/html-single/optimizing_rhel_9_for_real_time_for_low_latency_operation/index)
 
 ## 1.3. Testing Environment
@@ -139,7 +140,7 @@ active
 ```
 
 ```
-# tuned-adm profile realtime
+# tuned-adm profile cpu-partitioning
 ```
 
 ```
@@ -148,12 +149,12 @@ active
 
 ```
 # tuned-adm active
-Current active profile: realtime
+Current active profile: cpu-partitioning
 ```
 
 ```
-# grep isolcpus /proc/cmdline
-BOOT_IMAGE=/boot/vmlinuz-6.8.0-39-generic root=UUID=af1698f8-a72d-4304-95c5-d40119d92281 ro console=tty0 console=ttyS0,115200n8 rootdelay=60 splash quiet vt.handoff=7 skew_tick=1 tsc=reliable rcupdate.rcu_normal_after_boot=1 isolcpus=managed_irq,domain,4-19 intel_pstate=disable nosoftlockup
+# cat /proc/cmdline
+BOOT_IMAGE=/boot/vmlinuz-6.8.0-39-generic root=UUID=af1698f8-a72d-4304-95c5-d40119d92281 ro console=tty0 console=ttyS0,115200n8 rootdelay=60 splash quiet vt.handoff=7 skew_tick=1 tsc=reliable rcupdate.rcu_normal_after_boot=1 nohz=on nohz_full=4-19 rcu_nocbs=4-19 tuned.non_isolcpus=00f0000f intel_pstate=disable nosoftlockup
 ```
 
 ### 1.4.2. Memory tuning
@@ -259,8 +260,23 @@ vpp config for CPU.
 ```
 cpu {
   main-core 4
-  corelist-workers 6,8,10,12,14,16,18
+  corelist-workers 6,8,10,12
 
+}
+
+dpdk {
+  dev 0000:07:00.0 {
+    num-rx-queues 2
+    num-rx-desc 512
+    num-tx-desc 512
+
+   }
+
+  dev 0000:08:00.0 {
+    num-rx-queues 2
+    num-rx-desc 512
+    num-tx-desc 512
+   }
 }
 ```
 
@@ -270,16 +286,30 @@ start the vpp
 ```
 
 ```
+# vppctl show hardware-interfaces| grep Gigabit -A5
+GigabitEthernet7/0/0               1     up   GigabitEthernet7/0/0
+  Link speed: unknown
+  RX Queues:
+    queue thread         mode
+    0     vpp_wk_0 (1)   polling
+    1     vpp_wk_1 (2)   polling
+--
+GigabitEthernet8/0/0               2     up   GigabitEthernet8/0/0
+  Link speed: unknown
+  RX Queues:
+    queue thread         mode
+    0     vpp_wk_2 (3)   polling
+    1     vpp_wk_3 (4)   polling
+```
+
+```
 # vppctl show threads
 ID     Name                Type        LWP     Sched Policy (Priority)  lcore  Core   Socket State
-0      vpp_main                        3492    other (0)                4      2      0
-1      vpp_wk_0            workers     3494    other (0)                6      3      0
-2      vpp_wk_1            workers     3495    other (0)                8      4      0
-3      vpp_wk_2            workers     3496    other (0)                10     5      0
-4      vpp_wk_3            workers     3497    other (0)                12     0      1
-5      vpp_wk_4            workers     3498    other (0)                14     1      1
-6      vpp_wk_5            workers     3499    other (0)                16     2      1
-7      vpp_wk_6            workers     3500    other (0)                18     3      1
+0      vpp_main                        1330    other (0)                4      2      0
+1      vpp_wk_0            workers     1383    other (0)                6      3      0
+2      vpp_wk_1            workers     1384    other (0)                8      4      0
+3      vpp_wk_2            workers     1385    other (0)                10     5      0
+4      vpp_wk_3            workers     1386    other (0)                12     0      1
 ```
 
 ### 1.4.4. VPP show commands
