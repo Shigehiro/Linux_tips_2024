@@ -18,6 +18,8 @@
   - [1.9. L3 DSR DSCP Kernel module build results](#19-l3-dsr-dscp-kernel-module-build-results)
   - [1.10. Confirm whether the DSCP kernel module works with both IPv4 and IPv6 using Python Scapy](#110-confirm-whether-the-dscp-kernel-module-works-with-both-ipv4-and-ipv6-using-python-scapy)
   - [1.11. How to load vpp configuration from a text file when starting vpp](#111-how-to-load-vpp-configuration-from-a-text-file-when-starting-vpp)
+  - [1.12. How to manage loopback interface with nmcli(NetworkManager)](#112-how-to-manage-loopback-interface-with-nmclinetworkmanager)
+  - [1.13. How to configure L3DSR DSCP rules with firewalld](#113-how-to-configure-l3dsr-dscp-rules-with-firewalld)
 
 
 ## 1.1. Description
@@ -716,4 +718,65 @@ ip route add 172.25.2.0/24 via 172.25.1.20 GigabitEthernet8/0/0
 # configure load balancer plugin
 lb conf timeout 3
 lb vip 172.26.0.10/24 encap l3dsr dscp 2 po
+```
+
+## 1.12. How to manage loopback interface with nmcli(NetworkManager)
+
+See [How do I manage the "lo" loopback interface using NetworkManager?](https://access.redhat.com/solutions/2108251)
+
+```
+mv /etc/sysconfig/network-scripts/ifcfg-lo /root
+```
+
+```
+nmcli connection reload
+```
+
+```
+nmcli con add connection.id lo connection.type loopback connection.interface-name lo connection.autoconnect yes
+```
+
+```
+nmcli connection up lo
+```
+
+```
+nmcli con mod lo +ipv4.addresses 172.26.0.10/32
+```
+
+## 1.13. How to configure L3DSR DSCP rules with firewalld
+
+Ensure firewalld is running and the other services, nftables and iptables, are not running.
+```
+# systemctl is-enabled firewalld.service nftables.service iptables.service
+enabled
+disabled
+Failed to get unit file state for iptables.service: No such file or directory
+```
+
+```
+# systemctl is-active firewalld.service
+active
+```
+
+```
+# firewall-cmd --set-default-zone=trusted
+```
+
+```
+# firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+success
+```
+
+```
+# firewall-cmd --direct --get-all-rules
+ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
+
+```
+# cat /etc/firewalld/direct.xml
+<?xml version="1.0" encoding="utf-8"?>
+<direct>
+  <rule ipv="ipv4" table="mangle" chain="INPUT" priority="100">-m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10</rule>
+</direct>
 ```
