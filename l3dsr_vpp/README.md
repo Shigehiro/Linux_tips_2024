@@ -783,3 +783,5 @@ firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 
 
 firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
 ```
+
+You can check the configuration from `/etc/firewalld/direct.xml` or `firewall-cmd --direct --get-all-rules`.
