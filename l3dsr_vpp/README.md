@@ -752,10 +752,10 @@ See [How can I disable connection tracking (conntrack) with firewalld?](https://
 
 Ensure firewalld is running and the other services, nftables and iptables, are not running.
 ```
-# systemctl is-enabled firewalld.service nftables.service iptables.service
-enabled
-disabled
-Failed to get unit file state for iptables.service: No such file or directory
+# systemctl is-active firewalld.service nftables.service iptables.service
+active
+inactive
+inactive
 ```
 
 ```
@@ -768,14 +768,27 @@ active
 ```
 
 ```
-firewall-cmd --direct --add-rule ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
-firewall-cmd --direct --add-rule ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
-firewall-cmd --direct --add-rule ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
-firewall-cmd --direct --add-rule ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
-firewall-cmd --direct --add-rule ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
-firewall-cmd --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
-firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 99 -m dscp --dscp 2 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
+firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
 firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
+```
+
+```
+# cat /etc/firewalld/direct.xml
+<?xml version="1.0" encoding="utf-8"?>
+<direct>
+  <rule ipv="ipv4" table="raw" chain="PREROUTING" priority="0">-p udp --dport 53 -j NOTRACK</rule>
+  <rule ipv="ipv4" table="raw" chain="PREROUTING" priority="0">-p udp --sport 53 -j NOTRACK</rule>
+  <rule ipv="ipv4" table="raw" chain="OUTPUT" priority="0">-p udp --dport 53 -j NOTRACK</rule>
+  <rule ipv="ipv4" table="raw" chain="OUTPUT" priority="0">-p udp --sport 53 -j NOTRACK</rule>
+  <rule ipv="ipv4" table="mangle" chain="INPUT" priority="100">-m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10</rule>
+  <rule ipv="ipv4" table="filter" chain="INPUT" priority="0">-p udp --dport 53 -j ACCEPT</rule>
+  <rule ipv="ipv4" table="filter" chain="INPUT" priority="0">-p tcp --dport 53 -j ACCEPT</rule>
+</direct>
 ```
 
 ```
@@ -784,12 +797,7 @@ ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
 ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
 ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
 ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
+ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
 ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
 ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
-```
-
-```
-# conntrack -L |grep -w "dport=53" -c
-conntrack v1.4.7 (conntrack-tools): 12 flow entries have been shown.
-0
 ```
