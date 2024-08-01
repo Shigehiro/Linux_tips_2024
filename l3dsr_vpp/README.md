@@ -770,34 +770,16 @@ active
 ```
 firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
 firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p tcp --dport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw PREROUTING 0 -p tcp --sport 53 -j NOTRACK
+
 firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
 firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p tcp --dport 53 -j NOTRACK
+firewall-cmd --permanent --direct --add-rule ipv4 raw OUTPUT 0 -p tcp --sport 53 -j NOTRACK
+
 firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
 firewall-cmd --permanent --direct --add-rule ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
+
 firewall-cmd --permanent --direct --add-rule ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
-```
-
-```
-# cat /etc/firewalld/direct.xml
-<?xml version="1.0" encoding="utf-8"?>
-<direct>
-  <rule ipv="ipv4" table="raw" chain="PREROUTING" priority="0">-p udp --dport 53 -j NOTRACK</rule>
-  <rule ipv="ipv4" table="raw" chain="PREROUTING" priority="0">-p udp --sport 53 -j NOTRACK</rule>
-  <rule ipv="ipv4" table="raw" chain="OUTPUT" priority="0">-p udp --dport 53 -j NOTRACK</rule>
-  <rule ipv="ipv4" table="raw" chain="OUTPUT" priority="0">-p udp --sport 53 -j NOTRACK</rule>
-  <rule ipv="ipv4" table="mangle" chain="INPUT" priority="100">-m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10</rule>
-  <rule ipv="ipv4" table="filter" chain="INPUT" priority="0">-p udp --dport 53 -j ACCEPT</rule>
-  <rule ipv="ipv4" table="filter" chain="INPUT" priority="0">-p tcp --dport 53 -j ACCEPT</rule>
-</direct>
-```
-
-```
-# firewall-cmd --direct --get-all-rules
-ipv4 raw PREROUTING 0 -p udp --dport 53 -j NOTRACK
-ipv4 raw PREROUTING 0 -p udp --sport 53 -j NOTRACK
-ipv4 raw OUTPUT 0 -p udp --dport 53 -j NOTRACK
-ipv4 raw OUTPUT 0 -p udp --sport 53 -j NOTRACK
-ipv4 mangle INPUT 100 -m dscp --dscp 2 -j DADDR --set-daddr=172.26.0.10
-ipv4 filter INPUT 0 -p udp --dport 53 -j ACCEPT
-ipv4 filter INPUT 0 -p tcp --dport 53 -j ACCEPT
 ```
