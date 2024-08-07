@@ -6,4 +6,5 @@ set int state GigabitEthernet8/0/0 up
 set int state GigabitEthernet9/0/0 up
 
 # SPAN
+set interface span GigabitEthernet7/0/0 l2 destination GigabitEthernet9/0/0 rx
 set interface span GigabitEthernet7/0/0 destination GigabitEthernet9/0/0 rx

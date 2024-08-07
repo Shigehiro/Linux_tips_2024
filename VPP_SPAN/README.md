@@ -50,18 +50,20 @@ Reference:
 
 <br>Configure SPAN:
 ```
+vpp# set interface span GigabitEthernet7/0/0 l2 destination GigabitEthernet9/0/0 rx
 vpp# set interface span GigabitEthernet7/0/0 destination GigabitEthernet9/0/0 rx
+
 ```
 
 ```
 vpp# show interface span 
 Source                           Destination                       Device       L2
-GigabitEthernet7/0/0             GigabitEthernet9/0/0             (    rx) (  none)
-vpp# 
+GigabitEthernet7/0/0             GigabitEthernet9/0/0             (    rx) (    rx)
 ```
 
 ```
 # grep span /usr/share/vpp/scripts/vpp-config.txt 
+set interface span GigabitEthernet7/0/0 l2 destination GigabitEthernet9/0/0 rx
 set interface span GigabitEthernet7/0/0 destination GigabitEthernet9/0/0 rx
 ```
 
