@@ -9,3 +9,4 @@
 - [How to fix: Apparmor permission denies /var/lib/libvirt/images](./ubuntu24.04_apparmor_denied/README.md)
 - [Kernel tuning for fd.io VPP](./kernel_tuning_vpp/README.md)
 - [Configure SPAN on fd.io VPP](./VPP_SPAN/README.md)
+- [Analyze DNS capture data with zeek](./Analyze_DNS_zeek/README.md)
