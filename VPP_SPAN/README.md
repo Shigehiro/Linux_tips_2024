@@ -81,3 +81,13 @@ listening on enp7s0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 02:31:58.645322 IP 10.1.0.10.33029 > 10.2.0.10.53: 41445+ [1au] A? localhost. (50)
 02:31:59.667582 IP 10.1.0.10.54419 > 10.2.0.10.53: 24697+ [1au] A? localhost. (50)
 ```
+
+## If SPAN does not work..
+
+try PROMISC on your network interface/bridge, such as
+```
+sudo ifconfig no-ip03 promisc
+sudo ifconfig vnet36 promisc
+sudo ifconfig vnet20 promisc
+sudo ifconfig eth0 promisc
+```
