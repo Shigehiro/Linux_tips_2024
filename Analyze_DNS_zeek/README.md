@@ -90,3 +90,34 @@ $ jq . -c dns.log|head -3
 {"ts":1723017912.943123,"uid":"CNaPJKtFuB0pPuUrj","id.orig_h":"10.1.0.10","id.orig_p":55198,"id.resp_h":"10.2.0.10","id.resp_p":53,"proto":"udp","trans_id":2011,"rtt":0.04031991958618164,"query":"www.bing.com","qclass":1,"qclass_name":"C_INTERNET","qtype":1,"qtype_name":"A","rcode":0,"rcode_name":"NOERROR","AA":false,"TC":false,"RD":true,"RA":true,"Z":0,"answers":["www-www.bing.com.trafficmanager.net","www.bing.com.edgekey.net","e86303.dscx.akamaiedge.net","23.37.92.182","23.37.92.184","23.37.92.179","23.37.92.176","23.37.92.177","23.37.92.185","23.37.92.181","23.37.92.183","23.37.92.178"],"TTLs":[14056.0,60.0,14056.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0,20.0],"rejected":false}
 {"ts":1723017913.94314,"uid":"CNaPJKtFuB0pPuUrj","id.orig_h":"10.1.0.10","id.orig_p":55198,"id.resp_h":"10.2.0.10","id.resp_p":53,"proto":"udp","trans_id":2012,"query":"www.edge.microsoft.com","qclass":1,"qclass_name":"C_INTERNET","qtype":1,"qtype_name":"A","rcode":3,"rcode_name":"NXDOMAIN","AA":false,"TC":false,"RD":true,"RA":false,"Z":0,"rejected":false}
 ```
+
+Analyze approximately 80 MB of DNS capture data with Zeek.
+```
+$ ls -lh dns.pcap 
+-rw-r--r--. 1 tcpdump tcpdump 79M Aug  7 19:32 dns.pcap
+
+$ time sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
+
+real	0m13.131s
+user	0m0.007s
+sys	0m0.019s
+
+$ ls -lh dns.log 
+-rw-r--r--. 1 root root 116M Aug  7 22:36 dns.log
+```
+
+## Analyzing a JSON-Formatted DNS Log Using Python
+
+Generate a JSON-formatted log:
+```
+$ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
+```
+
+Analyze the log with Python:
+```
+$ ./analyze_zeek_dns_json_log.py -f dns.log 
+Result from Wed Aug  7 19:22:19 2024 to Wed Aug  7 19:32:18 2024
+{'NXDOMAIN': 196698, 'NOERROR': 101317, 'SERVFAIL': 1476}
+{'10.10.0.0': 61258, '10.10.0.1': 63549, '10.10.0.2': 63561, '10.10.0.3': 63550, '10.10.0.4': 47709}
+{'A': 299520}
+```
