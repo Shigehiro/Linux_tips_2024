@@ -1,0 +1,9 @@
+set int ip address GigabitEthernet7/0/0 10.1.0.254/24
+set int ip address GigabitEthernet8/0/0 10.2.0.254/24
+set int ip address GigabitEthernet9/0/0 10.3.0.244/24
+set int state GigabitEthernet7/0/0 up
+set int state GigabitEthernet8/0/0 up
+set int state GigabitEthernet9/0/0 up
+
+# SPAN
+set interface span GigabitEthernet7/0/0 destination GigabitEthernet9/0/0 rx
