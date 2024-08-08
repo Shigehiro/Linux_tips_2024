@@ -212,20 +212,6 @@ redef LogAscii::use_json = T;
 Reflect the config.
 ```
 # /opt/zeek/bin/zeekctl deploy
-# /opt/zeek/bin/zeekctl restart
-```
-
-
-```
-# tail -3 /opt/zeek/share/zeek/site/local.zeek 
-@load tuning/json-logs
-redef LogAscii::json_timestamps = JSON::TS_ISO8601;
-redef LogAscii::use_json = T;
-```
-
-Reflect the config.
-```
-# /opt/zeek/bin/zeekctl deploy
 ```
 
 ```
