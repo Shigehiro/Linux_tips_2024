@@ -1,7 +1,13 @@
 # Configure SPAN with FD.io VPP
 
+- [Configure SPAN with FD.io VPP](#configure-span-with-fdio-vpp)
+  - [Network Topology](#network-topology)
+  - [Configure SPAN](#configure-span)
+  - [If both the VPP and the capture node are running under KVM and you cannot see wire data on the capture node.](#if-both-the-vpp-and-the-capture-node-are-running-under-kvm-and-you-cannot-see-wire-data-on-the-capture-node)
+
 ## Network Topology
 
+All nodes are running as virtual machines under KVM.
 ```
    Client .10
       | 10.1.0.0/24
@@ -82,12 +88,35 @@ listening on enp7s0, link-type EN10MB (Ethernet), snapshot length 262144 bytes
 02:31:59.667582 IP 10.1.0.10.54419 > 10.2.0.10.53: 24697+ [1au] A? localhost. (50)
 ```
 
-## If SPAN does not work..
+## If both the VPP and the capture node are running under KVM and you cannot see wire data on the capture node.
 
-try PROMISC on your network interface/bridge, such as
+Try the below.<br>
+
+Here is the capture node:
 ```
-sudo ifconfig no-ip03 promisc
-sudo ifconfig vnet36 promisc
-sudo ifconfig vnet20 promisc
-sudo ifconfig eth0 promisc
+$ sudo virsh domiflist span-zeek01
+ Interface   Type      Source    Model    MAC
+-------------------------------------------------------------
+ vnet8       network   default   virtio   52:54:00:f2:b7:b3
+ vnet9       network   no-ip03   virtio   52:54:00:8e:5b:30 # span network ( collect wire data )
 ```
+
+Here is the vpp node:
+```
+$ sudo virsh domiflist span-vpp01
+ Interface   Type      Source    Model    MAC
+-------------------------------------------------------------
+ vnet4       network   default   virtio   52:54:00:b9:37:4c
+ vnet5       network   no-ip01   virtio   52:54:00:d5:a0:cd
+ vnet6       network   no-ip02   virtio   52:54:00:0b:a2:a8
+ vnet7       network   no-ip03   virtio   52:54:00:99:f4:93 # span network ( span port )
+```
+
+On the KVM host:
+```
+$ sudo brctl setageing no-ip03 0
+$ sudo brctl setfd no-ip03 0
+```
+
+You will see wire data on the capture node.<br>
+See https://man7.org/linux/man-pages/man8/brctl.8.html.
