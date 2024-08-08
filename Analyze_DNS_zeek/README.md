@@ -1,5 +1,14 @@
 # Analyze a DNS capture data with zeek
 
+- [Analyze a DNS capture data with zeek](#analyze-a-dns-capture-data-with-zeek)
+  - [Description](#description)
+  - [Reference](#reference)
+  - [Walkthrough logs](#walkthrough-logs)
+  - [Analyzing a JSON-Formatted DNS Log Using Python](#analyzing-a-json-formatted-dns-log-using-python)
+  - [Run zeek as daemon](#run-zeek-as-daemon)
+    - [Dump logs with JSON formatat](#dump-logs-with-json-formatat)
+
+
 ## Description
 
 Here is how to analyze a DNS capture data with zeek.
@@ -120,4 +129,106 @@ Result from Wed Aug  7 19:22:19 2024 to Wed Aug  7 19:32:18 2024
 {'NXDOMAIN': 196698, 'NOERROR': 101317, 'SERVFAIL': 1476}
 {'10.10.0.0': 61258, '10.10.0.1': 63549, '10.10.0.2': 63561, '10.10.0.3': 63550, '10.10.0.4': 47709}
 {'A': 299520}
+```
+
+## Run zeek as daemon
+
+Reference
+- [zeekctl](https://github.com/zeek/zeekctl)
+
+Configure the capture interface:
+```
+# ls /opt/zeek/etc/
+networks.cfg  node.cfg  zeekctl.cfg  zkg
+```
+
+```
+# grep ^interface /opt/zeek/etc/node.cfg 
+interface=enp7s0
+```
+
+Start zeek:
+```
+# /opt/zeek/bin/zeekctl start
+starting zeek ...
+```
+
+```
+# ps aux |grep zeek|grep -v grep
+root        1424  0.0  0.0   7872  3456 ?        S    02:45   0:00 bash /opt/zeek/share/zeekctl/scripts/run-zeek -1 -i enp7s0 -U .status -p zeekctl -p zeekctl-live -p standalone -p local -p zeek local.zeek zeekctl zeekctl/standalone zeekctl/auto
+root        1430  1.7  3.0 1420940 250024 ?      Sl   02:45   0:00 /opt/zeek/bin/zeek -i enp7s0 -U .status -p zeekctl -p zeekctl-live -p standalone -p local -p zeek local.zeek zeekctl zeekctl/standalone zeekctl/auto
+```
+
+Interactive mode:
+```
+# /opt/zeek/bin/zeekctl 
+[ZeekControl] > status
+Name         Type       Host          Status    Pid    Started
+zeek         standalone localhost     running   1430   08 Aug 02:45:23
+```
+
+```
+[ZeekControl] > capstats
+Interface             kpps       mbps       (10s average)
+----------------------------------------
+localhost/enp7s0      0.0        0.0
+```
+
+```
+[ZeekControl] > netstats
+       zeek: 1723085401.496032 recvd=2278 dropped=0 link=2278
+```
+
+By default, the logs are stored under `/opt/zeek/logs`
+```
+# ls /opt/zeek/logs/current
+broker.log  capture_loss.log  conn.log  dns.log  known_services.log  loaded_scripts.log  notice.log  packet_filter.log  stats.log  stderr.log  stdout.log  telemetry.log  weird.log
+```
+
+```
+# for i in $(seq 1 3);do ls -lh /opt/zeek/logs/current/dns.log ;sleep 5;done
+-rw-r--r-- 1 root zeek 548K Aug  8 02:53 /opt/zeek/logs/current/dns.log
+-rw-r--r-- 1 root zeek 557K Aug  8 02:53 /opt/zeek/logs/current/dns.log
+-rw-r--r-- 1 root zeek 565K Aug  8 02:53 /opt/zeek/logs/current/dns.log
+```
+
+Print the config:
+```
+# /opt/zeek/bin/zeekctl config 
+```
+
+### Dump logs with JSON formatat
+
+
+Edit `/opt/zeek/etc/zeekctl.cfg`.
+
+```
+# tail -3 /opt/zeek/share/zeek/site/local.zeek 
+@load tuning/json-logs
+redef LogAscii::json_timestamps = JSON::TS_ISO8601;
+redef LogAscii::use_json = T;
+```
+
+Reflect the config.
+```
+# /opt/zeek/bin/zeekctl deploy
+# /opt/zeek/bin/zeekctl restart
+```
+
+
+```
+# tail -3 /opt/zeek/share/zeek/site/local.zeek 
+@load tuning/json-logs
+redef LogAscii::json_timestamps = JSON::TS_ISO8601;
+redef LogAscii::use_json = T;
+```
+
+Reflect the config.
+```
+# /opt/zeek/bin/zeekctl deploy
+```
+
+```
+# tail -1 /opt/zeek/logs/current/dns.log
+{"ts":"2024-08-08T05:17:21.304827Z","uid":"COUx9d1HISX9hBSs24","id.orig_h":"10.10.0.0","id.orig_p":17713,"id.resp_h":"10.2.0.10","id.resp_p":53,"proto":"udp","trans_id":29109,"query":"www.kendo.cdn.telerik.com","qclass":1,"qclass_name":"C_INTERNET","qtype":1,"qtype_name":"A","rcode":3,"rcode_name":"NXDOMAIN","AA":false,"TC":false,"RD":true,"RA":false,"Z":0,"rejected":false}
 ```
