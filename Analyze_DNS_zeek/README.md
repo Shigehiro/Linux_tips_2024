@@ -26,7 +26,7 @@ reading from file dns.pcap, link-type EN10MB (Ethernet), snapshot length 262144
 
 Analyze the wire data.
 ```
-$ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek
+$ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek
 ```
 
 You can see the some log files as below.
@@ -57,7 +57,7 @@ $ head -15 dns.log
 
 With zeek-cut.
 ```
-$ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek sh -c "cat dns.log | zeek-cut id.orig_h query answers" | head -10
+$ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek sh -c "cat dns.log | zeek-cut id.orig_h query answers" | head -10
 10.1.0.10       www.login.microsoftonline.com   -
 10.1.0.10       www.bing.com    www-www.bing.com.trafficmanager.net,www.bing.com.edgekey.net,e86303.dscx.akamaiedge.net,23.37.92.182,23.37.92.184,23.37.92.179,23.37.92.176,23.37.92.177,23.37.92.185,23.37.92.181,23.37.92.183,23.37.92.178
 10.1.0.10       www.edge.microsoft.com  -
@@ -71,7 +71,7 @@ $ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zee
 
 More with zeek-cut
 ```
-$ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek sh -c "cat dns.log | zeek-cut id.orig_h qtype_name rcode_name query answers" | head -5
+$ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek sh -c "cat dns.log | zeek-cut id.orig_h qtype_name rcode_name query answers" | head -5
 10.1.0.10       A       NXDOMAIN        www.login.microsoftonline.com   -
 10.1.0.10       A       NOERROR www.bing.com    www-www.bing.com.trafficmanager.net,www.bing.com.edgekey.net,e86303.dscx.akamaiedge.net,23.37.92.182,23.37.92.184,23.37.92.179,23.37.92.176,23.37.92.177,23.37.92.185,23.37.92.181,23.37.92.183,23.37.92.178
 10.1.0.10       A       NXDOMAIN        www.edge.microsoft.com  -
@@ -81,7 +81,7 @@ $ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zee
 
 Dump logs with JSON format
 ```
-sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
+podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
 ```
 
 ```
@@ -96,7 +96,7 @@ Analyze approximately 80 MB of DNS capture data with Zeek.
 $ ls -lh dns.pcap 
 -rw-r--r--. 1 tcpdump tcpdump 79M Aug  7 19:32 dns.pcap
 
-$ time sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
+$ time podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
 
 real	0m13.131s
 user	0m0.007s
@@ -110,7 +110,7 @@ $ ls -lh dns.log
 
 Generate a JSON-formatted log:
 ```
-$ sudo podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
+$ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
 ```
 
 Analyze the log with Python:
