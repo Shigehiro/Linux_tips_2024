@@ -53,7 +53,8 @@ def count_src_ip(log='dns_log'):
                 result[i['id.orig_h']] += 1
             else:
                 result[i['id.orig_h']] = 1
-    return result
+    sorted_result = sorted(result.items(), key=lambda x:x[1]) 
+    return sorted_result
 
 def count_qtype(log='dns_log'):
     """
@@ -61,12 +62,41 @@ def count_qtype(log='dns_log'):
     """
     result = dict()
     for i in dns_log:
-        if 'qtype_name' in i.keys():
+        if 'qtype_name' in i.keys(): 
             if i['qtype_name'] in result.keys():
                 result[i['qtype_name']] += 1
             else:
                 result[i['qtype_name']] = 1
     return result
+
+def count_2nd_level(log='dns_log'):
+    result = dict()
+    for i in dns_log:
+        if 'query' in i.keys():
+            a = i['query'].split('.')
+            if a[-1] and a[-2]:
+                a = a[-2] + '.' + a[-1]
+                if a in result.keys():
+                    result[a] += 1
+                else:
+                    result[a] = 1
+    sorted_result = sorted(result.items(), key=lambda x:x[1]) 
+    return sorted_result
+
+def count_3rd_level(log='dns_log'):
+    result = dict()
+    for i in dns_log:
+        if 'query' in i.keys():
+            a = i['query'].split('.')
+            if a[-1] and a[-2] and a[-3]:
+                a = a[-3] + '.' + a[-2] + '.' + a[-1]
+                if a in result.keys():
+                    result[a] += 1
+                else:
+                    result[a] = 1
+    sorted_result = sorted(result.items(), key=lambda x:x[1]) 
+    return sorted_result
+
 
 if __name__ == "__main__":
     # load the log file, put them into the list
@@ -75,16 +105,40 @@ if __name__ == "__main__":
     # print timestamp
     start_time = datetime.datetime.fromtimestamp(dns_log[0]['ts']).strftime('%c')
     end_time = datetime.datetime.fromtimestamp(dns_log[-1]['ts']).strftime('%c')
-    print(f"Result from {start_time} to {end_time}")
+    print(f"# Result from {start_time} to {end_time}")
 
     # count result codes
     result = count_result_code()
+    print("# Result codes")
     print(result)
+    print("")
 
     # count source IP addresses
     result = count_src_ip()
+    print("# Source IP addresses")
     print(result)
+    print("")
 
     # count query types
     result = count_qtype()
+    print("# Query types")
     print(result)
+    print("")
+
+    # top 10 domains, 2nd level
+    result = count_2nd_level()
+    print("# Top 10 domains, 2nd level")
+    counter = -1
+    for _ in range(0,10):
+        print(result[counter])
+        counter -= 1
+    print("")
+
+    # top 10 domains, 3rd level
+    result = count_3rd_level()
+    print("# Top 10 domains, 3rd level")
+    counter = -1
+    for _ in range(0,10):
+        print(result[counter])
+        counter -= 1
+    print("")
