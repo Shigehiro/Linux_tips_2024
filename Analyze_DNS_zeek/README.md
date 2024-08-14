@@ -6,7 +6,7 @@
   - [Walkthrough logs](#walkthrough-logs)
   - [Analyzing a JSON-Formatted DNS Log Using Python](#analyzing-a-json-formatted-dns-log-using-python)
   - [Run zeek as daemon](#run-zeek-as-daemon)
-    - [Dump logs with JSON formatat](#dump-logs-with-json-formatat)
+    - [Dump logs with JSON format](#dump-logs-with-json-format)
 
 
 ## Description
@@ -226,7 +226,7 @@ Print the config:
 # /opt/zeek/bin/zeekctl config 
 ```
 
-### Dump logs with JSON formatat
+### Dump logs with JSON format
 
 
 Edit `/opt/zeek/etc/zeekctl.cfg`.
