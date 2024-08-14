@@ -115,6 +115,12 @@ if __name__ == "__main__":
     print(result)
     print("")
 
+    # count query types
+    result = count_qtype()
+    print("# Query types")
+    print(result)
+    print("")
+
     # top N source IP addresses
     result = count_src_ip()
     counter = -1
@@ -127,12 +133,6 @@ if __name__ == "__main__":
     for _ in range(0,max_range):
         print(result[counter])
         counter -= 1
-    print("")
-
-    # count query types
-    result = count_qtype()
-    print("# Query types")
-    print(result)
     print("")
 
     # top N domains, 2nd level
