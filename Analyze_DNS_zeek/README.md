@@ -117,6 +117,7 @@ $ ls -lh dns.log
 
 ## Analyzing a JSON-Formatted DNS Log Using Python
 
+Assume the captured data includes information on the direction between stub and full resolvers.<br>
 Generate a JSON-formatted log:
 ```
 $ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zeek -r ./dns.pcap local Log::default_logdir=/zeek -C LogAscii::use_json=T
@@ -124,40 +125,34 @@ $ podman container run --rm -v $(pwd):/zeek/:rw -w /zeek docker.io/zeek/zeek zee
 
 Analyze the log with Python:
 ```
-$ ./analyze_zeek_dns_json_log.py -f ./dns.log
+$ ./analyze_zeek_dns_json_log.py -f dns.log -m 5
 # Result from Wed Aug  7 19:22:19 2024 to Wed Aug  7 19:32:18 2024
 # Result codes
 {'NXDOMAIN': 196698, 'NOERROR': 101317, 'SERVFAIL': 1476}
 
-# Source IP addresses
-[('10.10.0.4', 47709), ('10.10.0.0', 61258), ('10.10.0.1', 63549), ('10.10.0.3', 63550), ('10.10.0.2', 63561)]
-
 # Query types
 {'A': 299520}
 
-# Top 10 domains, 2nd level
+# Top 5 Source IP addresses
+('10.10.0.2', 63561)
+('10.10.0.3', 63550)
+('10.10.0.1', 63549)
+('10.10.0.0', 61258)
+('10.10.0.4', 47709)
+
+# Top 5 domains. 2nd level
 ('googlevideo.com', 9992)
 ('webex.com', 5041)
 ('amazonaws.com', 4675)
 ('sharepoint.com', 4398)
 ('fbcdn.net', 3501)
-('azure.com', 2741)
-('casalemedia.com', 2370)
-('office.net', 2326)
-('edgekey.net', 2317)
-('akamaiedge.net', 2240)
 
-# Top 10 domains, 3rd level
+# Top 5 domains. 3rd level
 ('infra.webex.com', 4192)
 ('fna.fbcdn.net', 2928)
 ('cosmic.office.net', 2092)
 ('cloudapp.azure.com', 1888)
 ('c.2mdn.net', 1776)
-('elb.amazonaws.com', 1610)
-('com.edgekey.net', 1587)
-('cdn.cloudflare.net', 1439)
-('com.akadns.net', 1352)
-('core.windows.net', 1315)
 ```
 
 ## Run zeek as daemon
