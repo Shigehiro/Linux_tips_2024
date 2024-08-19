@@ -235,9 +235,10 @@ $ ./arkime_api_sample.py -u admin -p ${PASSWORD} -i 192.168.100.186
 ['www.live.com']
 ['www.www.google.com']
 ['www.office.com']
-```
 
 Save a pcap file as dns.pcap
+```
+
 ```
 $ tshark -nn -r dns.pcap
     1   0.000000    10.10.0.0 → 10.2.0.10    DNS 83 Standard query 0xd956 A www.microsoftonline.com
