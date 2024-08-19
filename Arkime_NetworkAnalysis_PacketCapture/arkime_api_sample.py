@@ -26,18 +26,24 @@ headers = {'Content-Type': 'application/json', 'Accept': 'application/json'}
 arkime_port = '8005'
 
 # sessions
-res = requests.get(url=f"http://{arkime_ip}:{arkime_port}/api/sessions?length=5", headers=headers, auth=HTTPDigestAuth(arkime_user, arkime_password))
-#res = requests.get(url=f"http://{arkime_ip}:{arkime_port}/api/sessions?length=5&fields=destination.port,destination.ip", headers=headers, auth=HTTPDigestAuth(arkime_user, arkime_password))
+
+## List FQDNs
+res = requests.get(url=f"http://{arkime_ip}:{arkime_port}/api/sessions?date=-1&length=10&expression=ip.dst==10.2.0.10&&protocols==dns", headers=headers, auth=HTTPDigestAuth(arkime_user, arkime_password))
 res_json = json.loads(res.content.decode('utf-8'))
-#print(json.dumps(res_json))
 for i in res_json['data']:
-    #if 'dns' in i.keys() and i['destination']['port'] == 53 and i['destination']['ip'] == '10.2.0.10':
     if 'dns' in i.keys() and i['destination']['port'] == 53:
         print(i['dns']['host'])
+print("")
+
+## Download pcapng file
+res = requests.get(url=f"http://{arkime_ip}:{arkime_port}/api/sessions.pcapng?date=-1&length=10&expression=ip.dst==10.2.0.10&&protocols==dns", headers=headers, auth=HTTPDigestAuth(arkime_user, arkime_password), stream=True)
+pcap_file_name = 'dns.pcap'
+with open(pcap_file_name, 'wb') as f:
+    f.write(res.content)
+print(f"Save a pcap file as {pcap_file_name}")
 
 # connections
 res = requests.get(url=f"http://{arkime_ip}:{arkime_port}/api/connections", headers=headers, auth=HTTPDigestAuth(arkime_user, arkime_password))
 res_json = json.loads(res.content.decode('utf-8'))
 #print(json.dumps(res_json, indent=2))
-#print(json.dumps(res_json))
 

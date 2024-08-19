@@ -7,6 +7,7 @@
     - [Install OpenSearch](#install-opensearch)
     - [Installing Arkime Sensors](#installing-arkime-sensors)
   - [Accessing the Arkime UI](#accessing-the-arkime-ui)
+  - [Sample Usage of Arkime API](#sample-usage-of-arkime-api)
 
 ## Description
 
@@ -216,3 +217,37 @@ Generate traffic so that Arkime can collect wire data.
 ![Arkime UI Sessions](./Images/arkime_sessions01.PNG)
 ![Arkime UI Sessions](./Images/arkime_sessions02.PNG)
 ![Arkime UI Sessions](./Images/arkime_sessions03.PNG)
+
+## Sample Usage of Arkime API
+
+[Viewer v3.x - v5.x API](https://arkime.com/apiv3#viewer-v3x---v5x-api)
+
+This sample script displays 10 FQDNs and dowloads a pcapng file.
+```
+$ ./arkime_api_sample.py -u admin -p ${PASSWORD} -i 192.168.100.186
+['www.microsoft.com']
+['www.windowsupdate.com']
+['www.google.com']
+['www.microsoftonline.com']
+['www.data.microsoft.com']
+['www.events.data.microsoft.com']
+['www.ctldl.windowsupdate.com']
+['www.live.com']
+['www.www.google.com']
+['www.office.com']
+```
+
+Save a pcap file as dns.pcap
+```
+$ tshark -nn -r dns.pcap
+    1   0.000000    10.10.0.0 → 10.2.0.10    DNS 83 Standard query 0xd956 A www.microsoftonline.com
+    2  -0.000012    10.10.0.0 → 10.2.0.10    DNS 87 Standard query 0xd956 A www.ctldl.windowsupdate.com
+    3  -0.000012    10.10.0.0 → 10.2.0.10    DNS 89 Standard query 0xd956 A www.events.data.microsoft.com
+    4  -0.000012    10.10.0.0 → 10.2.0.10    DNS 81 Standard query 0xd956 A www.windowsupdate.com
+    5   0.000000    10.10.0.0 → 10.2.0.10    DNS 72 Standard query 0xd956 A www.live.com
+    6  -0.000012    10.10.0.0 → 10.2.0.10    DNS 74 Standard query 0xd956 A www.google.com
+    7  -0.000012    10.10.0.0 → 10.2.0.10    DNS 77 Standard query 0xd956 A www.microsoft.com
+    8  -0.000012    10.10.0.0 → 10.2.0.10    DNS 82 Standard query 0xd956 A www.data.microsoft.com
+    9  -0.000012    10.10.0.0 → 10.2.0.10    DNS 78 Standard query 0xd956 A www.www.google.com
+   10  -0.000012    10.10.0.0 → 10.2.0.10    DNS 74 Standard query 0xd956 A www.office.com
+```
