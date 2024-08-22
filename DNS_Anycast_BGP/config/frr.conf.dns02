@@ -1,0 +1,26 @@
+frr version 8.5.3
+frr defaults traditional
+hostname bgp-dns02
+no ip forwarding
+no ipv6 forwarding
+!
+router bgp 64513
+ bgp router-id 10.0.101.11
+ neighbor 10.0.101.254 remote-as 64512
+ neighbor 10.0.101.254 password password
+ neighbor 10.0.101.254 update-source 10.0.101.11
+ !
+ address-family ipv4 unicast
+  network 169.254.0.1/32
+  neighbor 10.0.101.254 soft-reconfiguration inbound
+  neighbor 10.0.101.254 route-map route-map-from-peers in
+  neighbor 10.0.101.254 route-map route-map-to-peers out
+ exit-address-family
+exit
+!
+route-map route-map-from-peers permit 9999
+exit
+!
+route-map route-map-to-peers permit 9999
+exit
+!
