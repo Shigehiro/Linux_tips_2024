@@ -25,6 +25,9 @@ Here is how to configure DNS Anycast with BGP.
 - [BGP + BFD config question](https://forum.vyos.io/t/bgp-bfd-config-question/13119/1)
 - [Getting Started to BGP](https://darin.web.id/sdn/configure-bgp-on-vyos-for-vsphere)
 - https://github.com/FRRouting/frr/issues/7249
+- https://thepacketgeek.com/
+- https://github.com/Exa-Networks/exabgp
+- [BGP Open-Source Tools – Quagga vs. BIRD vs. ExaBGP](https://www.bizety.com/2018/09/04/bgp-open-source-tools-quagga-vs-bird-vs-exabgp/)
 
 ## Network Topology
 
