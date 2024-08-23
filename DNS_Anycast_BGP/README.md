@@ -10,10 +10,11 @@
     - [Configure FRR](#configure-frr)
   - [Configure VyOS](#configure-vyos)
   - [Confirmation](#confirmation)
+  - [Application Health Check](#application-health-check)
 
 # Description
 
-Here is how to configure DNS Anycast with BGP.
+Here is how to configure DNS Anycast with BGP and ECMP.
 
 # Reference
 
@@ -41,7 +42,7 @@ Here is IP address of each node.
 - dns02 : 10.0.101.11
 - Anycast IP : 169.254.0.1/32
 
-<br>Here is AS number:
+<br>Here is the AS number I used:
 - VyOS : 64512
 - dns01, dns02 : 64513
 
@@ -50,7 +51,7 @@ $ show version |head -1
 Version:          VyOS 1.5-rolling-202408210022
 ```
 
-DNS servers.
+Here is the DNS server information.
 ```
 # cat /etc/rocky-release ; uname -ri 
 Rocky Linux release 9.4 (Blue Onyx)
@@ -153,6 +154,7 @@ exit
 !
 route-map route-map-to-peers permit 9999
 exit
+!
 ```
 
 On the dns02:
@@ -185,7 +187,6 @@ exit
 route-map route-map-to-peers permit 9999
 exit
 !
-
 ```
 
 ## Configure VyOS
@@ -316,4 +317,60 @@ bgp-client03 | CHANGED | rc=0 >>
 bgp-client02 | CHANGED | rc=0 >>
 "dns02"
 [root@bgp-client01 ~]# 
+```
+
+## Application Health Check
+
+Here is a sample script, health_check.py, which adds or deletes a BGP path based on the result of DNS health checking.
+
+Reference:
+- [Adding More ECMP and Health Checking To Anycast Lab](https://www.jasonvanpatten.com/2019/05/19/adding-more-ecmp-and-health-checking-to-anycast-lab/)
+
+<br>Install dnspython.
+```
+# ansible -i inventory.ini all -m shell -a 'dnf install -y python3-dns' 
+```
+
+Assume DNS software is down, but the BPG exists.
+```
+vyos@bgp-vyos01:~$ show ip route bgp
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+B>* 169.254.0.1/32 [20/0] via 10.0.101.10, eth2, weight 1, 00:05:39
+```
+
+Run the script.
+```
+[root@bgp-dns01 ~]# python health_check.py -s 169.254.0.1 -t A -q www.google.com -a 169.254.0.1 -as 64513
+[root@bgp-dns01 ~]#       
+```
+
+On the VyOS. The BGP path was removed.
+```
+vyos@bgp-vyos01:~$ show ip route bgp
+vyos@bgp-vyos01:~$        
+```
+
+Start the DNS software, add the BGP path.
+```
+[root@bgp-dns01 ~]# python health_check.py -s 169.254.0.1 -t A -q www.google.com -a 169.254.0.1 -as 64513
+[root@bgp-dns01 ~]#              
+```
+
+```
+vyos@bgp-vyos01:~$ show ip route bgp
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+B>* 169.254.0.1/32 [20/0] via 10.0.101.10, eth2, weight 1, 00:00:14
+vyos@bgp-vyos01:~$        
 ```
