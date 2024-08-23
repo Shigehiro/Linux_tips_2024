@@ -1,6 +1,6 @@
-# Load-Balance DNS Traffic with Anycast BGP ECP
+# Load-Balance DNS Traffic with Anycast BGP ECMP
 
-- [Load-Balance DNS Traffic with Anycast BGP ECP](#load-balance-dns-traffic-with-anycast-bgp-ecp)
+- [Load-Balance DNS Traffic with Anycast BGP ECMP](#load-balance-dns-traffic-with-anycast-bgp-ecmp)
 - [Description](#description)
 - [Reference](#reference)
   - [Network Topology](#network-topology)
