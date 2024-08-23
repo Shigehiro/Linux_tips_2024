@@ -1,6 +1,6 @@
-# DNS Anycast with BGP 
+# Load-Balance DNS Traffic with Anycast BGP ECP
 
-- [DNS Anycast with BGP](#dns-anycast-with-bgp)
+- [Load-Balance DNS Traffic with Anycast BGP ECP](#load-balance-dns-traffic-with-anycast-bgp-ecp)
 - [Description](#description)
 - [Reference](#reference)
   - [Network Topology](#network-topology)
@@ -18,25 +18,24 @@ Here is how to configure DNS Anycast with BGP.
 # Reference
 
 - [DNS Anycast: Using BGP for DNS High-Availability](https://yetiops.net/posts/anycast-bgp/)
-- [Anycast DNS - Using BGP](http://ddiguru.com/blog/anycast-dns-part-5-using-bgp)
 - [FRRouting User Guide](https://docs.frrouting.org/en/latest/)
 - [FRR and Anycast](https://www.unixdude.net/posts/2021/Mar/11/frr-and-anycast/)
 - [frr-anycast](https://github.com/dunielpls/frr-anycast)
-- [BGP + BFD config question](https://forum.vyos.io/t/bgp-bfd-config-question/13119/1)
-- [Getting Started to BGP](https://darin.web.id/sdn/configure-bgp-on-vyos-for-vsphere)
 - https://github.com/FRRouting/frr/issues/7249
+- https://gist.github.com/bufadu/0c3ba661c141a2176cd048f65430ae8d
+- [Adding More ECMP and Health Checking To Anycast Lab](https://www.jasonvanpatten.com/2019/05/19/adding-more-ecmp-and-health-checking-to-anycast-lab/)
 
 ## Network Topology
 
 All nodes are running as virtual machines under KVM.
 ```
-        10.0.100.0/24                   10.0.101.0/24
+         10.0.100.0/24                   10.0.101.0/24
                               
-Client -----------------eth1 VyOS eth2 ---------------- DNS servers(dns01, dns02)
+Three Clients ---------- eth1 VyOS eth2 -------- DNS servers(dns01, dns02)
 ```
 
 Here is IP address of each node.
-- client : 10.0.100.10
+- client0[1-3] : 10.0.100.1[1-3]
 - VyOS : 10.0.100.245, 10.0.101.254
 - dns01 : 10.0.101.10
 - dns02 : 10.0.101.11
@@ -65,13 +64,6 @@ Rocky Linux release 9.4 (Blue Onyx)
 [How do I manage the "lo" loopback interface using NetworkManager?](https://access.redhat.com/solutions/2108251)
 
 On the all DNS servers:
-```
-# nmcli con del lo
-# nmcli con add connection.id lo connection.type loopback connection.interface-name lo connection.autoconnect yes
-# nmcli con mod lo +ipv4.addresses 169.254.0.1/32
-# nmcli device reapply lo 
-```
-
 ```
 ansible -i inventory.ini all -m shell -a "nmcli con del lo ; nmcli con add connection.id lo connection.type loopback connection.interface-name lo connection.autoconnect yes ; nmcli con mod lo +ipv4.addresses 169.254.0.1/32 ; nmcli device reapply lo"
 ```
@@ -204,20 +196,38 @@ Version:          VyOS 1.5-rolling-202408210022
 ```
 
 ```
-$ show configuration commands |grep -E 'bgp|policy'
-set policy route-map anycast rule 10 action 'permit'
-set policy route-map anycast rule 10 set as-path prepend '64513'
+vyos@bgp-vyos01:~$ show configuration commands | egrep 'policy|protocols.*bgp|sysctl'
+set policy prefix-list AS64513-IN rule 10 action 'permit'
+set policy prefix-list AS64513-IN rule 10 prefix '169.254.0.1/32'
+set policy prefix-list AS64513-OUT rule 10 action 'deny'
+set policy prefix-list AS64513-OUT rule 10 prefix '169.254.0.1/32'
+set policy route-map AS64513-IN rule 10 action 'permit'
+set policy route-map AS64513-IN rule 10 match ip address prefix-list 'AS64513-IN'
+set policy route-map AS64513-IN rule 20 action 'deny'
+set policy route-map AS64513-OUT rule 10 action 'deny'
+set policy route-map AS64513-OUT rule 10 match ip address prefix-list 'AS64513-OUT'
+set policy route-map AS64513-OUT rule 20 action 'permit'
 set protocols bgp address-family ipv4-unicast maximum-paths ebgp '8'
 set protocols bgp address-family ipv4-unicast maximum-paths ibgp '8'
 set protocols bgp neighbor 10.0.101.10 peer-group 'group01'
 set protocols bgp neighbor 10.0.101.11 peer-group 'group01'
-set protocols bgp peer-group group01 address-family ipv4-unicast route-map import 'anycast'
+set protocols bgp parameters bestpath as-path multipath-relax
+set protocols bgp peer-group group01 address-family ipv4-unicast route-map export 'AS64513-OUT'
+set protocols bgp peer-group group01 address-family ipv4-unicast route-map import 'AS64513-IN'
 set protocols bgp peer-group group01 address-family ipv4-unicast soft-reconfiguration inbound
 set protocols bgp peer-group group01 password 'password'
 set protocols bgp peer-group group01 remote-as '64513'
 set protocols bgp peer-group group01 update-source '10.0.101.254'
 set protocols bgp system-as '64512'
-set system host-name 'bgp-vyos01'
+set system sysctl parameter net.ipv4.fib_multipath_hash_policy value '1'
+```
+
+```
+vyos@bgp-vyos01# show system sysctl parameter
+ parameter net.ipv4.fib_multipath_hash_policy {
+     value 1
+ }
+[edit]
 ```
 
 ## Confirmation
@@ -254,8 +264,21 @@ Total number of neighbors 1
 
 On the VyOS
 ```
-$ show bgp ipv4 
-BGP table version is 3, local router ID is 192.168.100.146, vrf id 0
+vyos@bgp-vyos01:~$ show ip route bgp
+Codes: K - kernel route, C - connected, S - static, R - RIP,
+       O - OSPF, I - IS-IS, B - BGP, E - EIGRP, N - NHRP,
+       T - Table, v - VNC, V - VNC-Direct, A - Babel, F - PBR,
+       f - OpenFabric,
+       > - selected route, * - FIB route, q - queued, r - rejected, b - backup
+       t - trapped, o - offload failure
+
+B>* 169.254.0.1/32 [20/0] via 10.0.101.10, eth2, weight 1, 01:26:26
+  *                       via 10.0.101.11, eth2, weight 1, 01:26:26
+```
+
+```
+vyos@bgp-vyos01:~$ show bgp ipv4
+BGP table version is 12, local router ID is 10.0.102.254, vrf id 0
 Default local pref 100, local AS 64512
 Status codes:  s suppressed, d damped, h history, * valid, > best, = multipath,
                i internal, r RIB-failure, S Stale, R Removed
@@ -264,36 +287,33 @@ Origin codes:  i - IGP, e - EGP, ? - incomplete
 RPKI validation codes: V valid, I invalid, N Not found
 
     Network          Next Hop            Metric LocPrf Weight Path
- *> 169.254.0.1/32   10.0.101.10              0             0 64513 64513 i
- *=                  10.0.101.11              0             0 64513 64513 i
+ *= 169.254.0.1/32   10.0.101.11              0             0 64513 i
+ *>                  10.0.101.10              0             0 64513 i
 
 Displayed  1 routes and 2 total paths
+vyos@bgp-vyos01:~$          
 ```
 
-Send DNS queries from the client.<br>
-Add secondary IP addresses to modify the source IP address when sending DNS queries.
+Send DNS queries from the three clients.<br>
 ```
-[root@bgp-client01 ~]# ip -4 a s eth0 |grep inet
-    inet 10.0.100.10/24 brd 10.0.100.255 scope global noprefixroute eth0
-    inet 10.0.100.11/24 brd 10.0.100.255 scope global secondary noprefixroute eth0
-    inet 10.0.100.12/24 brd 10.0.100.255 scope global secondary noprefixroute eth0
-    inet 10.0.100.13/24 brd 10.0.100.255 scope global secondary noprefixroute eth0
-    inet 10.0.100.14/24 brd 10.0.100.255 scope global secondary noprefixroute eth0
-    inet 10.0.100.15/24 brd 10.0.100.255 scope global secondary noprefixroute eth0
-```
-
-```
-[root@bgp-client01 ~]# for j in $(seq 1 2) ; do for i in $(seq 10 15);do dig @169.254.0.1 version.bind chaos txt +short -b 10.0.100.$i ; done ; done
+[root@bgp-client01 ~]# for i in $(seq 1 3);do ansible -i inventory.ini all -m shell -a 'dig @169.254.0.1 version.bind chaos txt +short' ;done
+bgp-client01 | CHANGED | rc=0 >>
 "dns02"
-"dns01"
-"dns01"
+bgp-client03 | CHANGED | rc=0 >>
 "dns02"
+bgp-client02 | CHANGED | rc=0 >>
 "dns01"
+bgp-client01 | CHANGED | rc=0 >>
 "dns01"
+bgp-client03 | CHANGED | rc=0 >>
 "dns02"
-"dns01"
-"dns01"
+bgp-client02 | CHANGED | rc=0 >>
 "dns02"
-"dns01"
-"dns01"
+bgp-client01 | CHANGED | rc=0 >>
+"dns02"
+bgp-client03 | CHANGED | rc=0 >>
+"dns02"
+bgp-client02 | CHANGED | rc=0 >>
+"dns02"
+[root@bgp-client01 ~]# 
 ```
