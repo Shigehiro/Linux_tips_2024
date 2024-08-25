@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Add or delete a BGP path based on the result of a DNS health check.
+Add or delete a BGP path by modifying the frr.service config based on the result of a DNS health check.
 """
 
 import argparse
@@ -30,17 +30,17 @@ def send_query(qname, rdtype, server, protocol='udp'):
     # health check result
     health_result = False
 
-    # Make a UDP query
+    # Send a query over UDP
     if protocol == 'udp':
         try:
-            res = dns.query.udp(q, where=server, timeout=timeout)
+            _ = dns.query.udp(q, where=server, timeout=timeout)
             health_result = True
         except Exception as _:
             pass
-    # Make a TCP query
+    # Send a query over TCP
     elif protocol == 'tcp':
         try:
-            res = dns.query.tcp(q, where=server, timeout=timeout)
+            _ = dns.query.tcp(q, where=server, timeout=timeout)
             health_result = True
         except Exception as _:
             pass
@@ -83,6 +83,27 @@ def del_bgp_path():
         f.write(command_text)
     subprocess.run(vtysh_cmd.split(), stdout=subprocess.PIPE, stderr = subprocess.PIPE)
 
+def check_process_staus(name):
+    command = f"systemctl is-active {name}"
+    stdout = subprocess.run(command.split(), capture_output=True, text=True).stdout
+    if 'active' == stdout.lower().rstrip():
+        return True
+    else:
+        return False
+
+def check_ip_in_frr_config(find_string):
+    #out = subprocess.run(f"/usr/bin/vtysh -c show run | grep {find_string}", shell=True)
+    ps1 = subprocess.Popen(['/usr/bin/vtysh', '-c', 'show run'], stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+    ps2 = subprocess.Popen(['grep', find_string], stdin=ps1.stdout, stdout=subprocess.PIPE)
+    ps1.stdout.close()
+    out, _ = ps2.communicate()
+    # Coud find the string
+    if find_string in out.decode('utf-8'):
+        return True
+    # Could not find the string
+    else:
+        return False
+
 if __name__ == '__main__':
     udp_result = False
     tcp_result = False
@@ -96,7 +117,20 @@ if __name__ == '__main__':
 
     # Add the anycast IP in BGP
     if udp_result and tcp_result:
-        add_bgp_path()
+        # frr is running and the anycast IP does not exist in the running config, add the BGP path
+        if check_process_staus(name='frr.service') and not check_ip_in_frr_config(find_string=anycast_ip):
+            print(f"Health Check OK, Add {anycast_ip} in frr")
+            add_bgp_path()
+        # frr is running and the anycast IP exists in the running config, do nothing
+        elif check_process_staus(name='frr.service') and check_ip_in_frr_config(find_string=anycast_ip):
+            print(f"Health Check OK, {anycast_ip} already exists in frr")
+        
     # Delete the anycast IP from BGP
     else:
-        del_bgp_path()
+        # frr is running and the anycast IP exists in the running config, delete the BGP path
+        if check_process_staus(name='frr.service') and check_ip_in_frr_config(find_string=anycast_ip):
+            print(f"Health Check Failed. Remove {anycast_ip} in frr")
+            del_bgp_path()
+        # frr is running and the anycast IP does not exist in the running config, do nothing
+        elif check_process_staus(name='frr.service') and not check_ip_in_frr_config(find_string=anycast_ip):
+            print(f"Health Check Failed. {anycast_ip} does not exist in frr")
