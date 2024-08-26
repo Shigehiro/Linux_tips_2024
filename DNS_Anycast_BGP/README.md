@@ -11,6 +11,7 @@
   - [Configure VyOS](#configure-vyos)
   - [Confirmation](#confirmation)
   - [Application Health Check](#application-health-check)
+  - [Daemonize the health check script](#daemonize-the-health-check-script)
 
 # Description
 
@@ -373,4 +374,30 @@ Codes: K - kernel route, C - connected, S - static, R - RIP,
 
 B>* 169.254.0.1/32 [20/0] via 10.0.101.10, eth2, weight 1, 00:00:14
 vyos@bgp-vyos01:~$        
+```
+
+## Daemonize the health check script
+
+Copy `health_check_daemonize.py` to /root.<br> 
+
+Make a unit file.<br>
+/usr/lib/systemd/system/config_frr_by_health_check.service
+```
+[Unit]
+Description=Config_FRR_by_health_check
+
+[Service]
+ExecStart=/usr/bin/python3 /root/health_check_daemonize.py -s 169.254.0.1 -t A -q www.google.com -a 169.254.0.1 -as 64513 -i 15
+Restart=always
+Type=forking
+PIDFile=/var/run/config_frr_health_check.pid
+
+[Install]
+WantedBy=multi-user.target
+```
+
+Start the service.
+```
+[root@bgp-dns01 ~]# systemctl daemon-reload
+[root@bgp-dns01 ~]# systemctl enable config_frr_by_health_check.service --now
 ```
