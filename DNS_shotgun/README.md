@@ -4,6 +4,7 @@
   - [Description](#description)
   - [Reference](#reference)
   - [Build shotgun from the source code on Ubuntu 24.04](#build-shotgun-from-the-source-code-on-ubuntu-2404)
+  - [Build shotgun from the source code on Fedora 40](#build-shotgun-from-the-source-code-on-fedora-40)
   - [Reply a capture file over UDP](#reply-a-capture-file-over-udp)
   - [Send queries from multiple source IP addresses](#send-queries-from-multiple-source-ip-addresses)
   - [Replay a capture file over TCP](#replay-a-capture-file-over-tcp)
@@ -34,6 +35,25 @@ apt install -y build-essential cmake gnutls-dev libuv1-dev libnghttp2-dev dnsjit
 Then, follow the build instructions at `https://dns-shotgun.readthedocs.io/en/stable/installation/`
 
 Or you can build a Docker image. You can find the Dockerfile at `https://github.com/CZ-NIC/shotgun`
+
+## Build shotgun from the source code on Fedora 40
+
+```
+# cat /etc/fedora-release ; uname -ri
+Fedora release 40 (Forty)
+6.10.9-200.fc40.x86_64 unknown
+```
+
+Install required RPMs to build dnsjit and shotgun.
+```
+# dnf group install -y 'Development Tools'
+
+# dnf group install -y 'C Development Tools and Libraries'
+
+# dnf install luajit-devel libpcap-devel lmdb-devel ck-devel gnutls-devel lz4-devel libzstd-devel libtool libtool-ltdl libuv libnghttp2 cmake libuv-devel -y
+```
+
+Then install [dnsjit](https://github.com/DNS-OARC/dnsjit?tab=readme-ov-file#build), build the shotgun from the source.
 
 ## Reply a capture file over UDP
 
