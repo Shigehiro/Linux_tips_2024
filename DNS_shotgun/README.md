@@ -50,7 +50,7 @@ Install required RPMs to build dnsjit and shotgun.
 
 # dnf group install -y 'C Development Tools and Libraries'
 
-# dnf install luajit-devel libpcap-devel lmdb-devel ck-devel gnutls-devel lz4-devel libzstd-devel libtool libtool-ltdl libuv libnghttp2 cmake libuv-devel -y
+# dnf install luajit-devel libpcap-devel lmdb-devel ck-devel gnutls-devel lz4-devel libzstd-devel libtool libtool-ltdl libuv libnghttp2 cmake libuv-devel python3-toml -y
 ```
 
 Then install [dnsjit](https://github.com/DNS-OARC/dnsjit?tab=readme-ov-file#build), build the shotgun from the source.
