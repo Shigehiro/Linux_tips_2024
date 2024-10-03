@@ -40,11 +40,10 @@ DNS Server --------- L2 SW --- kxdpgun/shotgun node
 
 ### Edit and Build knot-dns(kxdpgun) from the source
 
-By default, kxdpgun uses source ports ranging from 2,000 to 65,535.<br>
-See [kxdpgun doc](https://www.knot-dns.cz/docs/latest/html/man_kxdpgun.html#notes)<br>  
-
 I am going to generate the pcap data with kxdpgun, then use that with shotgun.<br>  
 DNS shotgun requires DNS capture data, including a bunch of client IP addresses, if you would like to generate high traffic with shotgun.<br>
+By default, kxdpgun uses source ports ranging from 2,000 to 65,535.<br>
+See [kxdpgun doc](https://www.knot-dns.cz/docs/latest/html/man_kxdpgun.html#notes)<br>  
 kxdpgun generates DNS traffic from multiple source IP addresses; however, the port ranges used for a client are from 2,000 to 65,535,<br> which makes it difficult for me to generate traffic from a bunch of client IP addresses with kxdpgun.<br>  
 So, I changed the port range from the default, then built the code.<br>
 
