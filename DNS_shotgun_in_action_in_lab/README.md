@@ -2,6 +2,7 @@
 
 - [DNS Shotgun in Action in Lab Environment](#dns-shotgun-in-action-in-lab-environment)
   - [Description](#description)
+  - [Reference](#reference)
   - [Tested Environment](#tested-environment)
   - [Walkthrough logs](#walkthrough-logs)
     - [Edit and Build knot-dns(kxdpgun) from the source](#edit-and-build-knot-dnskxdpgun-from-the-source)
@@ -20,6 +21,12 @@ Here is how to generate high DNS traffic(100,000 QPS) with DNS shotgun.
 - Prepare the pcap data for DNS shotgun with kxdpgun in lab environment
 - Process the pcap data
 - Replay DNS capture data with shotgun
+
+## Reference
+
+- https://dns-shotgun.readthedocs.io/en/stable/
+- https://github.com/CZ-NIC/knot
+- https://www.knot-dns.cz/docs/latest/html/man_kxdpgun.html
 
 ## Tested Environment
 
@@ -140,4 +147,13 @@ Connection successfully reapplied to device 'eth0'.
 Replay the cap data from the multiple source IPs.
 ```
 # ./replay.py -r out_dir/6f36a67e.pcap -c udp -s 192.168.113.10 -b 192.168.200.0/24
+```
+
+You can specify multiple network ranges as below.
+```
+# ./replay.py -r out_dir/6cadb465.pcap -c udp -s 192.168.113.10 -b 192.168.200.0/24 -b 192.168.201.0/24 -b 192.168.202.0/24
+```
+
+```
+# ./replay.py -r out_dir/6cadb465.pcap -c udp -s 192.168.113.10 -b 192.168.200.0/24 -b 192.168.201.0/24 -b 192.168.202.0/24 -b 192.168.203.0/24 -b 192.168.204.0/24 -b 192.168.205.0/24
 ```
