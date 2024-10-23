@@ -40,7 +40,7 @@ Add `ip a` to see the network state.
 ExecStartPre=sh -c "/usr/sbin/ip a > /root/ip_a_execstartpre.txt"
 ```
 
-If you see IPv6 in the tentative state as shown below, the process might fail to bind the socket.<br>
+If you see IPv6 in the ***tentative*** state as shown below, the process might fail to bind the socket.<br>
 The process can not bind the socket if IPv6 is in the tentative state.
 ```
 # grep tentative ip_a_execstartpre.txt
