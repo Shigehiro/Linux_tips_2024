@@ -15,3 +15,4 @@
 - [DNS Anycast and Load balacing with BGP and ECMP](./DNS_Anycast_BGP/README.md)
 - [DNS Shotgun in Action in Lab Environment](./DNS_shotgun_in_action_in_lab/README.md)
 - [Error about Cannot assign requested address (socket bind error EADDRNOTAVAIL)](./Cannot_assign_address_EADDRNOTAVAI/README.md)
+- [Monitoring DNS traffic with Suricata](./Suricata_for_monitoring_DNS/README.md)

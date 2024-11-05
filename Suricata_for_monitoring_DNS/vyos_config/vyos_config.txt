@@ -1,0 +1,17 @@
+set interfaces ethernet eth0 address 'dhcp'
+set interfaces ethernet eth0 description 'the internet'
+set interfaces ethernet eth1 address '10.33.33.254/24'
+set interfaces ethernet eth1 description 'client network'
+set interfaces ethernet eth2 address '10.33.34.254/24'
+set interfaces ethernet eth2 description 'vpp side network'
+set interfaces loopback lo
+set nat source rule 1 outbound-interface name 'eth0'
+set nat source rule 1 source address '10.33.0.0/16'
+set nat source rule 1 translation address 'masquerade'
+set protocols static route 10.33.35.0/24 next-hop 10.33.34.253
+set service ssh
+set system config-management commit-revisions '100'
+set system console device ttyS0 speed '115200'
+set system host-name 'span-vyos'
+set system syslog global facility all level 'info'
+set system syslog global facility local7 level 'debug'
