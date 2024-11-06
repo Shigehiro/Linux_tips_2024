@@ -1,0 +1,3 @@
+# My DNS rules
+alert dns $HOME_NET any -> $DNS_SERVERS 53 (msg:"Test01 bad domain"; dns.query; content:"bad.com"; nocase; endswith; sid:55555;)
+alert dns $HOME_NET any -> $DNS_SERVERS 53 (msg:"Test02 DNS threashold"; dns.opcode:0; threshold: type threshold, track by_src, count 100, seconds 10; sid:55556;)
