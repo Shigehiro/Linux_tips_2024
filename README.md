@@ -16,3 +16,4 @@
 - [DNS Shotgun in Action in Lab Environment](./DNS_shotgun_in_action_in_lab/README.md)
 - [Error about Cannot assign requested address (socket bind error EADDRNOTAVAIL)](./Cannot_assign_address_EADDRNOTAVAI/README.md)
 - [Monitoring DNS traffic with Suricata](./Suricata_for_monitoring_DNS/README.md)
+- [Setup DNSSEC test environment with SEED labs](./Setup_DNSSEC_environment/README.md)
