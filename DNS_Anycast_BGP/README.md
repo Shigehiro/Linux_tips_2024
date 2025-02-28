@@ -385,8 +385,10 @@ Make a unit file.<br>
 ```
 [Unit]
 Description=Config_FRR_by_health_check
+After=frr.service
 
 [Service]
+ExecStartPre=/usr/bin/sleep 5
 ExecStart=/usr/bin/python3 /root/health_check_daemonize.py -s 169.254.0.1 -t A -q www.google.com -a 169.254.0.1 -as 64513 -i 15
 Restart=always
 Type=forking
