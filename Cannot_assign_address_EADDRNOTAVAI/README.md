@@ -64,7 +64,7 @@ You might see the log as below.
 
 1. Add a sleep command in the unit file to delay the process startup.<br>
    - `ExecStartPre=-/bin/sleep 10`
-2. Disable IPv6 DAD
+2. Disable IPv6 DAD of physical NICs
      - `echo 0 > /proc/sys/net/ipv6/conf/eth0/accept_dad`
      - or edit sysctl.conf
         ```
