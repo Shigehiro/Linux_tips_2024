@@ -65,17 +65,15 @@ You might see the log as below.
 1. Add a sleep command in the unit file to delay the process startup.<br>
    - `ExecStartPre=-/bin/sleep 10`
 2. Disable IPv6 DAD of physical NICs
-     - `echo 0 > /proc/sys/net/ipv6/conf/eth0/accept_dad`
-     - or edit sysctl.conf
-        ```
-        # grep dad /etc/sysctl.d/99-sysctl.conf
-        net.ipv6.conf.eth0.accept_dad = 0
-        ```
-
+     - edit sysctl.conf
         ```
         net.ipv6.conf.eth0.autoconf = 0
         net.ipv6.conf.eth0.accept_ra = 0
         net.ipv6.conf.eth0.accept_dad = 0
+        ..
+        net.ipv6.conf.ethN.autoconf = 0
+        net.ipv6.conf.ethN.accept_ra = 0
+        net.ipv6.conf.ethN.accept_dad = 0
         ```
 3. Disable IPv6 addresses if you do not need them
      - `nmcli connection modify managed-default-eth0 ipv6.method disabled`
